@@ -1,32 +1,19 @@
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-import os
 
-# DATABASE_URL = "postgresql://user:password@host:port/database"
-# Example for local development with environment variables:
-DB_USER = os.getenv("DB_USER", "your_db_user")
-DB_PASSWORD = os.getenv("DB_PASSWORD", "your_db_password")
-DB_HOST = os.getenv("DB_HOST", "localhost")
-DB_PORT = os.getenv("DB_PORT", "5432")
-DB_NAME = os.getenv("DB_NAME", "pai_nai_dee_db")
+from app.core.config import settings # Import settings
 
-#SQLALCHEMY_DATABASE_URL = f"postgresql://{DB_USER}:{DB_PASSWORD}@{DB_HOST}:{DB_PORT}/{DB_NAME}"
-# Using a default SQLite database for now for easier setup, will change to PostgreSQL later.
-SQLALCHEMY_DATABASE_URL = "sqlite:///./pai_nai_dee.db"
+# Use the DATABASE_URL from settings
+SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
-
-engine = create_engine(
-    SQLALCHEMY_DATABASE_URL,
-    # connect_args={"check_same_thread": False} # Needed only for SQLite
-)
-
-# For SQLite, add connect_args
+# Adjust engine creation based on whether it's SQLite or PostgreSQL
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
-        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False}
+        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False} # Needed only for SQLite
     )
 else:
+    # For PostgreSQL or other databases, connect_args might not be needed or different
     engine = create_engine(SQLALCHEMY_DATABASE_URL)
 
 

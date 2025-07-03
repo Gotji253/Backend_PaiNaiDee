@@ -2,8 +2,13 @@ fastapi
 uvicorn[standard]
 sqlalchemy
 pydantic
+pydantic-settings
+alembic  # Added Alembic
 python-jose[cryptography]
-psycopg2-binary
+psycopg2-binary # For PostgreSQL, ensure this is installed if using postgres
+# If using async with Alembic and SQLAlchemy, you might need:
+# greenlet  # For some async ORM operations with Alembic
+# asyncpg   # For async PostgreSQL driver
 pytest
 # pytest-asyncio removed to rely on anyio's plugin
 httpx
