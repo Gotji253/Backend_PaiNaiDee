@@ -3,7 +3,8 @@ from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
 from app.db.database import Base
-from app.models.place import itinerary_place_association # Import the association table
+from app.models.place import itinerary_place_association  # Import the association table
+
 
 class Itinerary(Base):
     __tablename__ = "itineraries"
@@ -15,7 +16,9 @@ class Itinerary(Base):
     created_at = Column(DateTime(timezone=True), server_default=func.now())
     updated_at = Column(DateTime(timezone=True), onupdate=func.now())
 
-    user_id = Column(Integer, ForeignKey("users.id"), nullable=False) # User who owns the itinerary
+    user_id = Column(
+        Integer, ForeignKey("users.id"), nullable=False
+    )  # User who owns the itinerary
 
     # Relationships
     user = relationship("User", back_populates="itineraries")
@@ -24,8 +27,9 @@ class Itinerary(Base):
     places_in_itinerary = relationship(
         "Place",
         secondary=itinerary_place_association,
-        back_populates="itineraries_featuring" # This back_populates needs to be defined in Place model
+        back_populates="itineraries_featuring",  # This back_populates needs to be defined in Place model
     )
+
 
 # Now, I need to go back and add the `itineraries_featuring` back_populates in `place.py`
 # The `Place` model currently has:

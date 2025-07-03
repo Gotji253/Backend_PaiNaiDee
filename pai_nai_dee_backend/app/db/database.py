@@ -2,7 +2,7 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from app.core.config import settings # Import settings
+from app.core.config import settings  # Import settings
 
 # Use the DATABASE_URL from settings
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
@@ -10,7 +10,8 @@ SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 # Adjust engine creation based on whether it's SQLite or PostgreSQL
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
     engine = create_engine(
-        SQLALCHEMY_DATABASE_URL, connect_args={"check_same_thread": False} # Needed only for SQLite
+        SQLALCHEMY_DATABASE_URL,
+        connect_args={"check_same_thread": False},  # Needed only for SQLite
     )
 else:
     # For PostgreSQL or other databases, connect_args might not be needed or different
@@ -21,6 +22,7 @@ SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
 Base = declarative_base()
 
+
 # Dependency to get DB session
 def get_db():
     db = SessionLocal()
@@ -28,6 +30,7 @@ def get_db():
         yield db
     finally:
         db.close()
+
 
 # Function to create database tables (optional, can be managed by Alembic)
 # def create_db_and_tables():

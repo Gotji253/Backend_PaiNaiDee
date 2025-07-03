@@ -1,10 +1,11 @@
 import pytest
 from httpx import AsyncClient
 from fastapi import status
-from sqlalchemy.orm import Session # For type hinting db fixture if used directly
+from sqlalchemy.orm import Session  # For type hinting db fixture if used directly
 
 from app.core.config import settings
-from app.schemas.user import UserCreate, User # For response validation
+from app.schemas.user import UserCreate  # User removed, For response validation
+
 # from app import crud # If we need to interact with CRUD directly for setup/teardown
 
 # A utility to generate unique usernames/emails for tests if needed
@@ -12,8 +13,11 @@ from app.schemas.user import UserCreate, User # For response validation
 # import random, string
 # return "".join(random.choices(string.ascii_lowercase, k=10))
 
+
 @pytest.mark.asyncio
-async def test_create_user_new_username_email(client: AsyncClient, db: Session): # db fixture can be used for setup/cleanup if needed
+async def test_create_user_new_username_email(
+    client: AsyncClient, db: Session
+):  # db fixture can be used for setup/cleanup if needed
     """
     Test creating a new user with a unique username and email.
     """
@@ -23,14 +27,16 @@ async def test_create_user_new_username_email(client: AsyncClient, db: Session):
 
     user_data = UserCreate(username=username, email=email, password=password)
 
-    response = await client.post(f"{settings.API_V1_STR}/users/", json=user_data.model_dump())
+    response = await client.post(
+        f"{settings.API_V1_STR}/users/", json=user_data.model_dump()
+    )
 
     assert response.status_code == status.HTTP_201_CREATED
     created_user = response.json()
     assert created_user["username"] == username
     assert created_user["email"] == email
     assert "id" in created_user
-    assert "hashed_password" not in created_user # Ensure password is not returned
+    assert "hashed_password" not in created_user  # Ensure password is not returned
 
 
 @pytest.mark.asyncio
@@ -45,7 +51,7 @@ async def test_create_user_duplicate_username(client: AsyncClient):
 
     user_data_1 = {"username": username, "email": email_1, "password": password}
     response_1 = await client.post(f"{settings.API_V1_STR}/users/", json=user_data_1)
-    assert response_1.status_code == status.HTTP_201_CREATED # First user created
+    assert response_1.status_code == status.HTTP_201_CREATED  # First user created
 
     user_data_2 = {"username": username, "email": email_2, "password": password}
     response_2 = await client.post(f"{settings.API_V1_STR}/users/", json=user_data_2)
@@ -85,6 +91,7 @@ async def test_login_for_access_token(client: AsyncClient, db: Session):
 
     # Ensure user exists (could also use a fixture for this)
     from app.crud import crud_user
+
     existing_user = crud_user.get_user_by_username(db, username=username)
     if not existing_user:
         user_in_create = UserCreate(username=username, email=email, password=password)
@@ -106,6 +113,7 @@ async def test_login_incorrect_password(client: AsyncClient, db: Session):
     password = "correctpassword"
 
     from app.crud import crud_user
+
     existing_user = crud_user.get_user_by_username(db, username=username)
     if not existing_user:
         user_in_create = UserCreate(username=username, email=email, password=password)
@@ -124,7 +132,7 @@ async def test_read_users_unauthenticated(client: AsyncClient):
     It should fail as it's now protected (even if further role checks are pending).
     """
     response = await client.get(f"{settings.API_V1_STR}/users/")
-    assert response.status_code == status.HTTP_401_UNAUTHORIZED # Expecting auth error
+    assert response.status_code == status.HTTP_401_UNAUTHORIZED  # Expecting auth error
 
 
 @pytest.mark.asyncio
@@ -137,6 +145,7 @@ async def test_read_users_authenticated(client: AsyncClient, test_user_token: st
     assert response.status_code == status.HTTP_200_OK
     # Further checks can be added if specific users are expected or based on roles
     assert isinstance(response.json(), list)
+
 
 # TODO: Add more tests for other user endpoints (GET /user/{id}, PUT /user/{id}, DELETE /user/{id})
 # TODO: Add tests for Place, Review, Itinerary CRUD and API endpoints.

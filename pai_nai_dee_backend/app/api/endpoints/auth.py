@@ -6,17 +6,18 @@ from datetime import timedelta
 from app import crud
 from app import schemas
 from app.db.database import get_db
-from app.core.security import create_access_token, verify_password
+from app.core.security import create_access_token  #  verify_password removed from here
+from app.core.password_utils import verify_password  #  Import directly
 from app.core.config import settings
-from app.models.user import User as UserModel # For type hinting current_user
-from app.core.security import get_current_active_user # Import the actual dependency
+from app.models.user import User as UserModel  #  For type hinting current_user
+from app.core.security import get_current_active_user  #  Import the actual dependency
 
 router = APIRouter()
 
+
 @router.post("/token", response_model=schemas.Token)
 async def login_for_access_token(
-    db: Session = Depends(get_db),
-    form_data: OAuth2PasswordRequestForm = Depends()
+    db: Session = Depends(get_db), form_data: OAuth2PasswordRequestForm = Depends()
 ):
     """
     OAuth2 compatible token login, get an access token for future requests.
@@ -37,6 +38,7 @@ async def login_for_access_token(
         data={"sub": user.username}, expires_delta=access_token_expires
     )
     return {"access_token": access_token, "token_type": "bearer"}
+
 
 @router.post("/test-token", response_model=schemas.User)
 def test_token(current_user: UserModel = Depends(get_current_active_user)):

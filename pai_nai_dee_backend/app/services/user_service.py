@@ -1,6 +1,9 @@
 from sqlalchemy.orm import Session
+from fastapi import Depends # Import Depends
+
 # from app import crud, schemas, models
 # from app.core.security import get_password_hash # Example import
+
 
 class UserService:
     def __init__(self, db: Session):
@@ -34,7 +37,8 @@ class UserService:
         # return {"username": user.username, "email": user.email, "total_reviews": len(user.reviews)}
         pass
 
-def get_user_service(db: Session = Depends(lambda: None)) -> UserService: # type: ignore
+
+def get_user_service(db: Session = Depends(lambda: None)) -> UserService:  # type: ignore
     """
     Dependency injector for UserService.
     Allows db session to be injected if this service is used as a FastAPI dependency.
@@ -44,8 +48,10 @@ def get_user_service(db: Session = Depends(lambda: None)) -> UserService: # type
     # If they are instantiated directly by routers, the router provides the db session.
     # Let's assume for now they might be instantiated by routers/other services.
     # To make it usable as a FastAPI dependency:
-    from app.db.database import get_db # Local import to avoid circular if service used globally
-    from fastapi import Depends as FastAPI今のDepends # Alias to avoid conflict
+    # from app.db.database import (
+    #     get_db,
+    # )  # Local import to avoid circular if service used globally. F401: Unused.
+    # from fastapi import Depends as FastAPI今のDepends  # Alias to avoid conflict. F401: Unused.
 
     # This pattern is more if the service itself is a FastAPI dependency.
     # def get_user_service_dependency(db: Session = FastAPI今のDepends(get_db)):
@@ -58,6 +64,7 @@ def get_user_service(db: Session = Depends(lambda: None)) -> UserService: # type
     # For now, let's not make it a FastAPI dependency itself.
     # Routers will get db session and pass it to service constructor.
     pass
+
 
 # Example of how a router might use it:
 # from app.services.user_service import UserService

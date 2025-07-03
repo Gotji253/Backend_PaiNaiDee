@@ -10,12 +10,12 @@ from alembic import context
 # This line assumes your project root is one level up from the 'alembic' directory.
 # If your project structure is different, you may need to adjust this.
 # Ensure `pai_nai_dee_backend` is in the Python path
-project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), '..'))
+project_root = os.path.abspath(os.path.join(os.path.dirname(__file__), ".."))
 sys.path.insert(0, project_root)
 
 # Import your app's settings and Base model
-from app.core.config import settings
-from app.db.database import Base # Your SQLAlchemy Base model
+from app.core.config import settings  # noqa: E402
+from app.db.database import Base  # Your SQLAlchemy Base model # noqa: E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -28,7 +28,7 @@ if config.config_file_name is not None:
 
 # Set the SQLAlchemy URL from your application's settings
 # This overrides the sqlalchemy.url in alembic.ini
-config.set_main_option('sqlalchemy.url', settings.DATABASE_URL)
+config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
 
 # Your application's Base.metadata object for 'autogenerate' support
 target_metadata = Base.metadata
@@ -77,9 +77,7 @@ def run_migrations_online() -> None:
     )
 
     with connectable.connect() as connection:
-        context.configure(
-            connection=connection, target_metadata=target_metadata
-        )
+        context.configure(connection=connection, target_metadata=target_metadata)
 
         with context.begin_transaction():
             context.run_migrations()

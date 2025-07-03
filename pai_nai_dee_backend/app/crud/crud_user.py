@@ -3,7 +3,8 @@ from typing import Optional, List
 
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
-from app.core.password_utils import get_password_hash # Import from new location
+from app.core.password_utils import get_password_hash  # Import from new location
+
 
 class CRUDUser:
     def get_user(self, db: Session, user_id: int) -> Optional[User]:
@@ -23,7 +24,7 @@ class CRUDUser:
         db_user = User(
             username=user_in.username,
             email=user_in.email,
-            hashed_password=hashed_password
+            hashed_password=hashed_password,
             # interests=user_in.interests # If interests are part of UserCreate and User model
         )
         db.add(db_user)
@@ -32,12 +33,16 @@ class CRUDUser:
         return db_user
 
     def update_user(self, db: Session, *, db_user: User, user_in: UserUpdate) -> User:
-        update_data = user_in.model_dump(exclude_unset=True) # Pydantic V2
+        update_data = user_in.model_dump(exclude_unset=True)  # Pydantic V2
 
-        if "password" in update_data and update_data["password"]: # Check if password is being updated
+        if (
+            "password" in update_data and update_data["password"]
+        ):  # Check if password is being updated
             hashed_password = get_password_hash(update_data["password"])
             db_user.hashed_password = hashed_password
-            del update_data["password"] # Remove password from dict to avoid direct model field update
+            del update_data[
+                "password"
+            ]  # Remove password from dict to avoid direct model field update
 
         for field, value in update_data.items():
             setattr(db_user, field, value)
@@ -53,6 +58,7 @@ class CRUDUser:
             db.delete(user)
             db.commit()
         return user
+
 
 user = CRUDUser()
 
