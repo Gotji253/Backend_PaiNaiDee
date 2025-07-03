@@ -4,18 +4,25 @@ from typing import Optional, List
 from app.models.place import Place
 from app.schemas.place import PlaceCreate, PlaceUpdate
 
+
 class CRUDPlace:
     def get_place(self, db: Session, place_id: int) -> Optional[Place]:
         return db.query(Place).filter(Place.id == place_id).first()
 
     def get_places(
-        self, db: Session, skip: int = 0, limit: int = 100,
-        category: Optional[str] = None, min_rating: Optional[float] = None
+        self,
+        db: Session,
+        skip: int = 0,
+        limit: int = 100,
+        category: Optional[str] = None,
+        min_rating: Optional[float] = None,
     ) -> List[Place]:
         query = db.query(Place)
         if category:
-            query = query.filter(Place.category.ilike(f"%{category}%")) # Case-insensitive search
-        if min_rating is not None: # Ensure min_rating can be 0.0
+            query = query.filter(
+                Place.category.ilike(f"%{category}%")
+            )  # Case-insensitive search
+        if min_rating is not None:  # Ensure min_rating can be 0.0
             query = query.filter(Place.average_rating >= min_rating)
         return query.offset(skip).limit(limit).all()
 
@@ -26,7 +33,7 @@ class CRUDPlace:
             category=place_in.category,
             latitude=place_in.latitude,
             longitude=place_in.longitude,
-            address=place_in.address
+            address=place_in.address,
             # average_rating is not set on creation, defaults to 0.0 or handled by a trigger/service
         )
         db.add(db_place)
@@ -34,7 +41,9 @@ class CRUDPlace:
         db.refresh(db_place)
         return db_place
 
-    def update_place(self, db: Session, *, db_place: Place, place_in: PlaceUpdate) -> Place:
+    def update_place(
+        self, db: Session, *, db_place: Place, place_in: PlaceUpdate
+    ) -> Place:
         update_data = place_in.model_dump(exclude_unset=True)
 
         for field, value in update_data.items():

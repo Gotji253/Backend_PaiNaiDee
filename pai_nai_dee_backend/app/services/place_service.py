@@ -1,13 +1,17 @@
 from sqlalchemy.orm import Session
 from typing import List, Dict, Any
+
 # from app import crud, models, schemas
 # from app.models.user import User as UserModel # For context like user preferences
+
 
 class PlaceService:
     def __init__(self, db: Session):
         self.db = db
 
-    def get_place_recommendations(self, user_id: int, top_n: int = 5) -> List[Dict[str, Any]]:
+    def get_place_recommendations(
+        self, user_id: int, top_n: int = 5
+    ) -> List[Dict[str, Any]]:
         """
         Placeholder for a recommendation engine.
         This would involve more complex logic, possibly:
@@ -24,7 +28,14 @@ class PlaceService:
         # For now, let's return some highly-rated places as a mock recommendation
         # popular_places = crud.crud_place.get_places(self.db, limit=top_n, min_rating=4.0) # Assuming min_rating filter
         # return [{"id": p.id, "name": p.name, "average_rating": p.average_rating} for p in popular_places]
-        return [{"id": i, "name": f"Highly Rated Mock Place {i}", "average_rating": 4.0 + i/10} for i in range(1, top_n + 1)]
+        return [
+            {
+                "id": i,
+                "name": f"Highly Rated Mock Place {i}",
+                "average_rating": 4.0 + i / 10,
+            }
+            for i in range(1, top_n + 1)
+        ]
 
     def update_place_average_rating(self, place_id: int) -> bool:
         """

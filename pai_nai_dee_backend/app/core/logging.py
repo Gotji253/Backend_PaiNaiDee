@@ -2,7 +2,9 @@ import logging
 import sys
 
 # Configuration
-LOG_LEVEL = "INFO"  # Default log level, can be configured via environment variable later
+LOG_LEVEL = (
+    "INFO"  # Default log level, can be configured via environment variable later
+)
 LOG_FORMAT = "%(asctime)s - %(name)s - %(levelname)s - %(module)s:%(funcName)s:%(lineno)d - %(message)s"
 # Example for JSON logging if preferred in the future:
 # LOG_FORMAT_JSON = '{"time": "%(asctime)s", "name": "%(name)s", "level": "%(levelname)s", "module": "%(module)s", "funcName": "%(funcName)s", "lineno": "%(lineno)d", "message": "%(message)s"}'
@@ -13,7 +15,7 @@ def setup_logging():
     Configures basic logging for the application.
     """
     # Get the root logger
-    logger = logging.getLogger() # Root logger
+    logger = logging.getLogger()  # Root logger
     logger.setLevel(LOG_LEVEL)
 
     # Create a handler for stdout
@@ -30,8 +32,13 @@ def setup_logging():
         logger.addHandler(handler)
 
     # Configure specific loggers if needed, e.g., uvicorn, sqlalchemy
-    logging.getLogger("uvicorn.access").setLevel(logging.WARNING) # Quieten uvicorn access logs if too noisy
-    logging.getLogger("sqlalchemy.engine").setLevel(logging.INFO) # Or WARNING for less SQL noise
+    logging.getLogger("uvicorn.access").setLevel(
+        logging.WARNING
+    )  # Quieten uvicorn access logs if too noisy
+    logging.getLogger("sqlalchemy.engine").setLevel(
+        logging.INFO
+    )  # Or WARNING for less SQL noise
+
 
 # Call setup_logging() when this module is imported, or call it explicitly in main.py
 # For now, let's make it so it needs to be called explicitly.

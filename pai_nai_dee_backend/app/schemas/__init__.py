@@ -1,26 +1,32 @@
-# Pydantic schemas
 # This file makes 'schemas' a Python package.
 
-from .user import User, UserCreate, UserUpdate, UserInDB
-from .place import Place, PlaceCreate, PlaceUpdate, PlaceInDB
-from .review import Review, ReviewCreate, ReviewUpdate # Removed ReviewInDB
-from .itinerary import Itinerary, ItineraryCreate, ItineraryUpdate # Removed ItineraryInDB
+# Import all your schemas here for easier access, e.g., from app.schemas import User, Place
+from .user import User, UserCreate, UserUpdate, UserInDBBase, UserInDB
+from .place import Place, PlaceCreate, PlaceUpdate, PlaceInDBBase, PlaceInDB
+from .review import Review, ReviewCreate, ReviewUpdate, ReviewInDBBase
+from .itinerary import Itinerary, ItineraryCreate, ItineraryUpdate, ItineraryInDBBase
+from .token import Token, TokenData  # Correctly import from token.py
 
-# Token schemas for authentication
-from pydantic import BaseModel
-from typing import Optional
-
-class Token(BaseModel):
-    access_token: str
-    token_type: str
-
-class TokenData(BaseModel):
-    username: Optional[str] = None
-
+# You can also define __all__ to specify what 'from app.schemas import *' imports
 __all__ = [
-    "User", "UserCreate", "UserUpdate", "UserInDB",
-    "Place", "PlaceCreate", "PlaceUpdate", "PlaceInDB",
-    "Review", "ReviewCreate", "ReviewUpdate", # Removed ReviewInDB
-    "Itinerary", "ItineraryCreate", "ItineraryUpdate", # Removed ItineraryInDB
-    "Token", "TokenData",
+    "User",
+    "UserCreate",
+    "UserUpdate",
+    "UserInDBBase",
+    "UserInDB",
+    "Place",
+    "PlaceCreate",
+    "PlaceUpdate",
+    "PlaceInDBBase",
+    "PlaceInDB",
+    "Review",
+    "ReviewCreate",
+    "ReviewUpdate",
+    "ReviewInDBBase",
+    "Itinerary",
+    "ItineraryCreate",
+    "ItineraryUpdate",
+    "ItineraryInDBBase",
+    "Token",
+    "TokenData",
 ]

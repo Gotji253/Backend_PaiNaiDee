@@ -1,6 +1,9 @@
-from sqlalchemy import Column, Integer, String, Table, ForeignKey
+from sqlalchemy import Column, Integer, String  # Table, ForeignKey removed
 from sqlalchemy.orm import relationship
-from sqlalchemy.dialects.postgresql import JSONB # For list of strings, if using PostgreSQL
+# JSONB import removed as it's unused in this file
+# from sqlalchemy.dialects.postgresql import (
+#     JSONB,
+# )  # For list of strings, if using PostgreSQL
 
 from app.db.database import Base
 
@@ -16,13 +19,14 @@ from app.db.database import Base
 # For now, let's keep it simple. We can refine this later.
 # For this example, we'll use a String type and expect comma-separated values, or plan for JSON type.
 
+
 class User(Base):
     __tablename__ = "users"
 
     id = Column(Integer, primary_key=True, index=True)
     username = Column(String, unique=True, index=True, nullable=False)
-    email = Column(String, unique=True, index=True, nullable=True) # Added email
-    hashed_password = Column(String, nullable=False) # For authentication
+    email = Column(String, unique=True, index=True, nullable=True)  # Added email
+    hashed_password = Column(String, nullable=False)  # For authentication
 
     # interests: Column(String) # Example: "food,travel,history" - needs parsing
     # Or using JSON for databases that support it well:

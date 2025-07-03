@@ -2,13 +2,14 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Any
 
-from app import schemas # Updated import
-from app import crud # Updated import
-from app.db.database import get_db # For DB session dependency
-from app.core.security import get_current_active_user # For protected routes
-from app.models.user import User as UserModel # For current user type hint
+from app import schemas  # Updated import
+from app import crud  # Updated import
+from app.db.database import get_db  # For DB session dependency
+from app.core.security import get_current_active_user  # For protected routes
+from app.models.user import User as UserModel  # For current user type hint
 
 router = APIRouter()
+
 
 @router.post("/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
 def create_user(
@@ -36,12 +37,15 @@ def create_user(
     user = crud.crud_user.create_user(db=db, user_in=user_in)
     return user
 
+
 @router.get("/", response_model=List[schemas.User])
 def read_users(
     db: Session = Depends(get_db),
     skip: int = 0,
     limit: int = 100,
-    current_user: UserModel = Depends(get_current_active_user), # To protect this endpoint
+    current_user: UserModel = Depends(
+        get_current_active_user
+    ),  # To protect this endpoint
 ) -> Any:
     """
     Retrieve users. (ADMINS ONLY - TODO: Implement proper role check)
@@ -53,11 +57,12 @@ def read_users(
     users = crud.crud_user.get_users(db, skip=skip, limit=limit)
     return users
 
+
 @router.get("/{user_id}", response_model=schemas.User)
 def read_user_by_id(
     user_id: int,
     db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_active_user), # For authorization
+    current_user: UserModel = Depends(get_current_active_user),  # For authorization
 ) -> Any:
     """
     Get a specific user by id. (User can get themselves, or admin can get any)
@@ -72,13 +77,14 @@ def read_user_by_id(
     #     raise HTTPException(status_code=403, detail="Not enough permissions")
     return user
 
+
 @router.put("/{user_id}", response_model=schemas.User)
 def update_user(
     *,
     db: Session = Depends(get_db),
     user_id: int,
     user_in: schemas.UserUpdate,
-    current_user: UserModel = Depends(get_current_active_user), # For authorization
+    current_user: UserModel = Depends(get_current_active_user),  # For authorization
 ) -> Any:
     """
     Update a user. (User can update themselves, or admin can update any)
@@ -103,7 +109,9 @@ def update_user(
 
     # Check for username conflict if username is being updated
     if user_in.username and db_user.username != user_in.username:
-        existing_user = crud.crud_user.get_user_by_username(db, username=user_in.username)
+        existing_user = crud.crud_user.get_user_by_username(
+            db, username=user_in.username
+        )
         if existing_user and existing_user.id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,
@@ -113,12 +121,13 @@ def update_user(
     user = crud.crud_user.update_user(db=db, db_user=db_user, user_in=user_in)
     return user
 
+
 @router.delete("/{user_id}", response_model=schemas.User)
 def delete_user(
     *,
     db: Session = Depends(get_db),
     user_id: int,
-    current_user: UserModel = Depends(get_current_active_user), # For authorization
+    current_user: UserModel = Depends(get_current_active_user),  # For authorization
 ) -> Any:
     """
     Delete a user. (ADMINS ONLY - TODO: Implement proper role check, or user can delete self)
@@ -132,6 +141,10 @@ def delete_user(
     #     raise HTTPException(status_code=403, detail="Not enough permissions to delete this user")
 
     deleted_user = crud.crud_user.delete_user(db=db, user_id=user_id)
-    if not deleted_user: # Should not happen if previous check passed, but as a safeguard
-        raise HTTPException(status_code=404, detail="User not found during delete operation")
+    if (
+        not deleted_user
+    ):  # Should not happen if previous check passed, but as a safeguard
+        raise HTTPException(
+            status_code=404, detail="User not found during delete operation"
+        )
     return deleted_user
