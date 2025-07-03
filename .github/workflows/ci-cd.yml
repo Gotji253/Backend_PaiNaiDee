@@ -1,0 +1,33 @@
+# Basic CI/CD workflow for Python FastAPI project
+
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches: [ main, develop ]
+  pull_request:
+    branches: [ main, develop ]
+
+jobs:
+  build-and-test:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v3
+
+    - name: Set up Python
+      uses: actions/setup-python@v3
+      with:
+        python-version: '3.9' # Specify your Python version
+
+    - name: Install dependencies
+      run: |
+        python -m pip install --upgrade pip
+        pip install -r pai_nai_dee_backend/requirements.txt
+
+    # Placeholder for running tests
+    # - name: Run tests
+    #   run: |
+    #     # Add your test command here, e.g., pytest
+    #     echo "No tests configured yet."
