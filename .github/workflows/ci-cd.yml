@@ -26,8 +26,6 @@ jobs:
         python -m pip install --upgrade pip
         pip install -r pai_nai_dee_backend/requirements.txt
 
-    # Placeholder for running tests
-    # - name: Run tests
-    #   run: |
-    #     # Add your test command here, e.g., pytest
-    #     echo "No tests configured yet."
+    - name: Run tests
+      run: |
+        pytest pai_nai_dee_backend/tests
