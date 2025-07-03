@@ -3,7 +3,7 @@ from typing import Optional, List
 
 from app.models.user import User
 from app.schemas.user import UserCreate, UserUpdate
-from app.core.security import get_password_hash # We'll need to create this security utility
+from app.core.password_utils import get_password_hash # Import from new location
 
 class CRUDUser:
     def get_user(self, db: Session, user_id: int) -> Optional[User]:

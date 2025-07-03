@@ -3,8 +3,8 @@
 
 from .user import User, UserCreate, UserUpdate, UserInDB
 from .place import Place, PlaceCreate, PlaceUpdate, PlaceInDB
-from .review import Review, ReviewCreate, ReviewUpdate, ReviewInDB
-from .itinerary import Itinerary, ItineraryCreate, ItineraryUpdate, ItineraryInDB
+from .review import Review, ReviewCreate, ReviewUpdate # Removed ReviewInDB
+from .itinerary import Itinerary, ItineraryCreate, ItineraryUpdate # Removed ItineraryInDB
 
 # Token schemas for authentication
 from pydantic import BaseModel
@@ -20,7 +20,7 @@ class TokenData(BaseModel):
 __all__ = [
     "User", "UserCreate", "UserUpdate", "UserInDB",
     "Place", "PlaceCreate", "PlaceUpdate", "PlaceInDB",
-    "Review", "ReviewCreate", "ReviewUpdate", "ReviewInDB",
-    "Itinerary", "ItineraryCreate", "ItineraryUpdate", "ItineraryInDB",
+    "Review", "ReviewCreate", "ReviewUpdate", # Removed ReviewInDB
+    "Itinerary", "ItineraryCreate", "ItineraryUpdate", # Removed ItineraryInDB
     "Token", "TokenData",
 ]
