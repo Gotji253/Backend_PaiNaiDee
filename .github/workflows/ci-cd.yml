@@ -11,6 +11,10 @@ on:
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false # Optional: true by default, false means all matrix jobs complete even if one fails
+      matrix:
+        python-version: ['3.9', '3.10', '3.11']
     defaults:
       run:
         working-directory: ./pai_nai_dee_backend # Set default working directory for steps
@@ -22,7 +26,7 @@ jobs:
     - name: Set up Python
       uses: actions/setup-python@v4 # Updated to v4
       with:
-        python-version: '3.11' # Using a more recent Python version
+        python-version: ${{ matrix.python-version }} # Using matrix Python version
         cache: 'pip' # Cache pip dependencies
 
     - name: Install project dependencies
