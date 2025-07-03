@@ -42,13 +42,16 @@ def get_db():
     finally:
         db.close()
 
-# Function to create database tables (optional, can be managed by Alembic)
-# def create_db_and_tables():
-#     Base.metadata.create_all(bind=engine)
+# Import all models here so Base knows about them
+from .models import users, places, activity_log, reviews
+
+# Function to create database tables (useful for initial setup without Alembic)
+def create_db_and_tables():
+    Base.metadata.create_all(bind=engine)
 
 # if __name__ == "__main__":
-#     # This can be called to initialize the database tables
-#     # For a real application, you would likely use Alembic migrations
+# This can be called to initialize the database tables
+# For a real application, you would likely use Alembic migrations
 #     print(f"Initializing database at {SQLALCHEMY_DATABASE_URL}")
 #     create_db_and_tables()
 #     print("Database tables created (if they didn't exist).")

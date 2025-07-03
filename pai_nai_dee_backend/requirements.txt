@@ -1,8 +1,10 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
-pydantic
+pydantic[email]
+email-validator
 python-jose[cryptography]
+passlib[bcrypt]
 psycopg2-binary
 pytest
 # pytest-asyncio removed to rely on anyio's plugin

@@ -14,12 +14,27 @@ async def root():
 async def health_check():
     return {"status": "ok"}
 
-# Placeholder for future routers
-# from .routes import users, places, trips, reviews
-# app.include_router(users.router)
-# app.include_router(places.router)
-# app.include_router(trips.router)
-# app.include_router(reviews.router)
+# Import routers
+from .routers import recommendations, reviews, users_router, places_router, auth_router
+from .database import Base, engine # For table creation if used
+# from .database import create_db_and_tables # If using this function
+
+# Create all tables (alternative to Alembic for quick dev setup)
+Base.metadata.create_all(bind=engine)
+# Make sure all models are imported in database.py or via models/__init__.py for this to work
+
+app.include_router(recommendations.router)
+app.include_router(reviews.router)
+app.include_router(users_router.router)
+app.include_router(places_router.router)
+app.include_router(auth_router.router) # Added auth router
+
+# # Optional: Create tables on startup using the function from database.py
+# @app.on_event("startup")
+# def on_startup():
+#     print("Attempting to create database tables if they don't exist...")
+#     create_db_and_tables()
+#     print("Database table check/creation complete.")
 
 if __name__ == "__main__":
     import uvicorn
