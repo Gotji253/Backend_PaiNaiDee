@@ -1,22 +1,33 @@
-import pytest # Still needed for test discovery and asserts
-from fastapi.testclient import TestClient
-from pai_nai_dee_backend.app.main import app # Import your FastAPI app
+import pytest
+from httpx import AsyncClient # Use AsyncClient from httpx for async app
+from fastapi import status # For status codes
 
-# Instantiate the TestClient
-client = TestClient(app)
+# Fixtures like `client` and `db` are automatically injected by pytest from conftest.py
 
-def test_health_check():
+@pytest.mark.asyncio
+async def test_health_check(client: AsyncClient):
     """
-    Tests the /health endpoint using TestClient.
+    Tests the /health endpoint.
     """
-    response = client.get("/health")
-    assert response.status_code == 200
+    response = await client.get("/health")
+    assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"status": "ok"}
 
-def test_root_endpoint():
+@pytest.mark.asyncio
+async def test_root_endpoint(client: AsyncClient):
     """
-    Tests the root / endpoint using TestClient.
+    Tests the root / endpoint.
     """
-    response = client.get("/")
-    assert response.status_code == 200
+    response = await client.get("/")
+    assert response.status_code == status.HTTP_200_OK
     assert response.json() == {"message": "Welcome to Pai Nai Dee API"}
+
+@pytest.mark.asyncio
+async def test_api_v1_root_endpoint(client: AsyncClient):
+    """
+    Tests the /api/v1/ endpoint.
+    """
+    from app.core.config import settings # To get API_V1_STR
+    response = await client.get(settings.API_V1_STR + "/")
+    assert response.status_code == status.HTTP_200_OK
+    assert response.json() == {"message": "Welcome to Pai Nai Dee API v1"}

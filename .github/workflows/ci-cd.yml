@@ -1,31 +1,76 @@
-# Basic CI/CD workflow for Python FastAPI project
+# CI/CD workflow for Pai Nai Dee FastAPI project
 
 name: CI/CD Pipeline
 
 on:
   push:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ] # Added master
   pull_request:
-    branches: [ main, develop ]
+    branches: [ main, develop, master ] # Added master
 
 jobs:
   build-and-test:
     runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: ./pai_nai_dee_backend # Set default working directory for steps
 
     steps:
     - name: Checkout code
-      uses: actions/checkout@v3
+      uses: actions/checkout@v4 # Updated to v4
 
     - name: Set up Python
-      uses: actions/setup-python@v3
+      uses: actions/setup-python@v4 # Updated to v4
       with:
-        python-version: '3.9' # Specify your Python version
+        python-version: '3.11' # Using a more recent Python version
+        cache: 'pip' # Cache pip dependencies
 
-    - name: Install dependencies
+    - name: Install project dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install -r pai_nai_dee_backend/requirements.txt
+        pip install -r requirements.txt
 
-    - name: Run tests
+    - name: Install linting and formatting tools
       run: |
-        pytest pai_nai_dee_backend/tests
+        pip install black flake8 pytest # Ensure pytest is also here if not in requirements.txt for some reason
+
+    - name: Run Black (Format Check)
+      run: |
+        black --check .
+
+    - name: Run Flake8 (Lint)
+      run: |
+        flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # Customize Flake8 options as needed, e.g., ignore specific errors, max-line-length
+        # flake8 . --count --exit-zero --max-complexity=10 --max-line-length=127 --statistics
+
+    # Optional: Alembic check (requires DB setup or specific check command)
+    # - name: Check Alembic migrations (if applicable and DB is available)
+    #   run: |
+    #     # Example: alembic check (this is not a standard command, placeholder)
+    #     # Or: alembic revision --autogenerate --check (requires DB connection)
+    #     # For now, we'll skip a live DB check for migrations in this basic CI.
+    #     echo "Alembic check placeholder - implement if needed"
+
+    - name: Run Pytest
+      env:
+        # If your tests need specific env vars, set them here.
+        # Example: DATABASE_URL: ${{ secrets.TEST_DATABASE_URL_CI }} # If using a CI-specific DB
+        # For SQLite test.db, usually no specific env var is needed if config defaults are fine.
+        # TESTING: "1" # conftest.py already sets os.environ["TESTING"] = "1"
+        # SECRET_KEY: "test_secret_key_for_ci" # If needed and not hardcoded/defaulted safely for tests
+        # Ensure your config.py handles test environment appropriately
+        # Our config uses TEST_DATABASE_URL which defaults to sqlite:///./test.db
+        pass # No specific env vars needed for now based on current test setup
+      run: |
+        pytest # Pytest will discover tests in the current (working) directory
+        # (which is pai_nai_dee_backend/ due to defaults.run.working-directory)
+
+    # Docker build step (optional, if you have a Dockerfile and want to build it)
+    # - name: Build Docker image
+    #   if: github.ref == 'refs/heads/main' # Example: only build on main branch pushes
+    #   run: |
+    #     docker build -t myapp:${{ github.sha }} .
+    #     # docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} # If pushing to registry
+    #     # docker push myregistry/myapp:${{ github.sha }}
+    #   working-directory: ./pai_nai_dee_backend # Ensure Docker build context is correct if Dockerfile is there
