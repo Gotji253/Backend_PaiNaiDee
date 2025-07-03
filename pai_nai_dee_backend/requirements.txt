@@ -4,3 +4,6 @@ sqlalchemy
 pydantic
 python-jose[cryptography]
 psycopg2-binary
+pytest
+# pytest-asyncio removed to rely on anyio's plugin
+httpx
