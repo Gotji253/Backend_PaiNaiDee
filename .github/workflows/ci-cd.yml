@@ -31,4 +31,3 @@ jobs:
     #   run: |
     #     # Add your test command here, e.g., pytest
     #     echo "No tests configured yet."
-      working-directory: ./pai_nai_dee_backend # Adjust if your requirements.txt is in a subdirectory
