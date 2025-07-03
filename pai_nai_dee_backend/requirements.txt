@@ -1,10 +1,12 @@
 fastapi
 uvicorn[standard]
 sqlalchemy
-pydantic
+pydantic[email]
 pydantic-settings
+python-multipart
 alembic  # Added Alembic
 python-jose[cryptography]
+passlib[bcrypt]
 psycopg2-binary # For PostgreSQL, ensure this is installed if using postgres
 # If using async with Alembic and SQLAlchemy, you might need:
 # greenlet  # For some async ORM operations with Alembic

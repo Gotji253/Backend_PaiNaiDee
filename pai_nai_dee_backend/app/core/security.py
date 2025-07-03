@@ -1,24 +1,21 @@
-from passlib.context import CryptContext
 from datetime import datetime, timedelta, timezone
 from typing import Optional
 
 from jose import JWTError, jwt
-from pydantic import BaseModel
+# Pydantic BaseModel might not be needed here anymore if TokenData is the only schema used from app.schemas
+# from pydantic import BaseModel
 
 from app.core.config import settings
+from .password_utils import verify_password # Import from new location
 
-# Password hashing context
-pwd_context = CryptContext(schemes=["bcrypt"], deprecated="auto")
+# pwd_context is now in password_utils.py
+# get_password_hash is now in password_utils.py and not used directly in this file anymore by other functions
 
 ALGORITHM = settings.ALGORITHM
-SECRET_KEY = settings.SECRET_KEY # This should be a strong, randomly generated string
+SECRET_KEY = settings.SECRET_KEY
 ACCESS_TOKEN_EXPIRE_MINUTES = settings.ACCESS_TOKEN_EXPIRE_MINUTES
 
-def verify_password(plain_password: str, hashed_password: str) -> bool:
-    return pwd_context.verify(plain_password, hashed_password)
-
-def get_password_hash(password: str) -> str:
-    return pwd_context.hash(password)
+# verify_password is imported
 
 # JWT Token creation
 def create_access_token(data: dict, expires_delta: Optional[timedelta] = None) -> str:
@@ -37,8 +34,8 @@ from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
 from app.db.database import get_db
-from app.schemas.token import TokenData
-from app.crud import crud_user
+from app.schemas import TokenData # Corrected import
+from app.crud import crud_user # Reverted to import the alias from app.crud
 from app.models.user import User as UserModel
 
 oauth2_scheme = OAuth2PasswordBearer(tokenUrl=f"{settings.API_V1_STR}/auth/token")
