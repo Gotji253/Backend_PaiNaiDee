@@ -1,0 +1,150 @@
+# GitHub Actions Workflow for building a Docker image, pushing to container registries,
+# and deploying to a Hugging Face Space.
+
+name: Deploy to Hugging Face Spaces
+
+# Controls when the workflow will run
+on:
+  push:
+    branches:
+      - main # Trigger the workflow on pushes to the main branch
+  # You can also add other triggers like pull_request, schedule, or workflow_dispatch
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest # Use the latest Ubuntu runner
+
+    steps:
+      # Step 1: Checkout the repository code
+      # This action checks-out your repository under $GITHUB_WORKSPACE, so your workflow can access it.
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Set up Docker Buildx
+      # This action installs and configures Docker Buildx, a CLI plugin that extends Docker build capabilities.
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 3: Login to Docker Hub
+      # This action logs into Docker Hub using credentials stored in GitHub Secrets.
+      # Replace DOCKERHUB_USERNAME with your Docker Hub username.
+      # DOCKERHUB_TOKEN should be an access token with write permissions.
+      - name: Login to Docker Hub
+        if: secrets.DOCKERHUB_USERNAME && secrets.DOCKERHUB_TOKEN # Only run if secrets are available
+        uses: docker/login-action@v3
+        with:
+          username: ${{ secrets.DOCKERHUB_USERNAME }}
+          password: ${{ secrets.DOCKERHUB_TOKEN }}
+
+      # Step 4: Login to GitHub Container Registry (GHCR)
+      # This action logs into GHCR using the GITHUB_TOKEN provided by GitHub Actions.
+      - name: Login to GitHub Container Registry
+        uses: docker/login-action@v3
+        with:
+          registry: ghcr.io
+          username: ${{ github.actor }} # The GitHub username or organization that owns the repository
+          password: ${{ secrets.GITHUB_TOKEN }} # GITHUB_TOKEN has permissions to push to GHCR for the current repo
+
+      # Step 5: Get current commit SHA
+      # This step extracts the short commit SHA to use as a Docker image tag.
+      - name: Get commit SHA
+        id: vars
+        run: echo "sha=$(git rev-parse --short HEAD)" >> $GITHUB_OUTPUT
+
+      # Step 6: Build and push Docker image
+      # This action builds the Docker image from your Dockerfile and pushes it to Docker Hub and GHCR.
+      # It tags the image with 'latest' and the commit SHA.
+      # Docker layer caching is enabled (cache-from, cache-to) to speed up builds.
+      - name: Build and push Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: . # Docker build context (root of the repository)
+          file: ./Dockerfile # Path to the Dockerfile
+          push: true # Actually push the image after building
+          tags: | # A list of tags for the image
+            ${{ secrets.DOCKERHUB_USERNAME && format('docker.io/{0}/{1}:latest', secrets.DOCKERHUB_USERNAME, github.event.repository.name) || '' }}
+            ${{ secrets.DOCKERHUB_USERNAME && format('docker.io/{0}/{1}:sha-{2}', secrets.DOCKERHUB_USERNAME, github.event.repository.name, steps.vars.outputs.sha) || '' }}
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:latest
+            ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:sha-${{ steps.vars.outputs.sha }}
+          cache-from: type=gha # Use GitHub Actions cache for pulling previous layers
+          cache-to: type=gha,mode=max # Push cache to GitHub Actions cache with max mode
+
+      # Step 7: Deploy to Hugging Face Spaces
+      # This step deploys your application to a Hugging Face Space.
+      # It uses the huggingface_hub library to upload the repository contents (including Dockerfile).
+      # The Space 'Atipan01/my-space' must be configured to build from a Dockerfile in its root.
+      # HF_TOKEN is a Hugging Face User Access Token with write access to the Space.
+      - name: Deploy to Hugging Face Spaces
+        if: secrets.HF_TOKEN # Only run if HF_TOKEN is available
+        env:
+          HF_TOKEN: ${{ secrets.HF_TOKEN }}
+        run: |
+          # Install the huggingface_hub library
+          echo "Installing huggingface_hub..."
+          pip install huggingface_hub --quiet
+
+          # Ensure a README.md with Hugging Face Space metadata exists.
+          # This is crucial for Docker-based Spaces.
+          # Customize title, emoji, etc., as needed in your actual repo's README.md.
+          if [ ! -f README.md ]; then
+            echo "Creating a basic README.md for Hugging Face Space..."
+            echo "---" > README.md
+            echo "title: ${{ github.event.repository.name }} on Hugging Face" >> README.md
+            echo "emoji: 🚀" >> README.md
+            echo "colorFrom: blue" >> README.md
+            echo "colorTo: purple" >> README.md
+            echo "sdk: docker" >> README.md
+            echo "app_file: Dockerfile" >> README.md # Points to the Dockerfile for the build
+            echo "---" >> README.md
+            echo "" >> README.md
+            echo "# ${{ github.event.repository.name }}" >> README.md
+            echo "This is a Docker-based Hugging Face Space deployed via GitHub Actions." >> README.md
+            echo "The application entry point is defined in the Dockerfile." >> README.md
+          elif ! grep -q "sdk: docker" README.md; then
+            echo "Updating existing README.md to include 'sdk: docker'..."
+            # This is a simple prepend; for complex YAML, a more robust parser might be needed.
+            echo -e "---\nsdk: docker\napp_file: Dockerfile\n---" > TEMP_README.md
+            cat README.md >> TEMP_README.md
+            mv TEMP_README.md README.md
+          fi
+
+          echo "Uploading repository contents to Hugging Face Space: Atipan01/my-space"
+          # This command uploads the entire content of the current directory (your repo)
+          # to the specified Hugging Face Space. The Space will then use the Dockerfile
+          # from the uploaded content to build and run the application.
+          python -c "
+          from huggingface_hub import HfApi
+          api = HfApi()
+          api.upload_folder(
+              folder_path='.',  # Upload current directory
+              path_in_repo='.', # Upload to the root of the Space repo
+              repo_id='Atipan01/my-space',
+              repo_type='space',
+              token='${{ secrets.HF_TOKEN }}',
+              commit_message='Deploy from GitHub Actions: ${{ github.sha }}'
+          )"
+
+          echo "---------------------------------------------------------------------"
+          echo "🚀 Deployment to Hugging Face Space 'Atipan01/my-space' initiated."
+          echo "The Space is configured to build from the Dockerfile in the repository root."
+          echo ""
+          echo "📦 Docker Images Pushed:"
+          if [ -n "${{ secrets.DOCKERHUB_USERNAME }}" ]; then
+            echo "   - Docker Hub: docker.io/${{ secrets.DOCKERHUB_USERNAME }}/${{ github.event.repository.name }}:sha-${{ steps.vars.outputs.sha }}"
+          fi
+          echo "   - GHCR: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:sha-${{ steps.vars.outputs.sha }}"
+          echo ""
+          echo "💡 Important Notes:"
+          echo "   - Ensure your Hugging Face Space 'Atipan01/my-space' exists and is set to 'Docker' SDK."
+          echo "   - The Space will build using the Dockerfile pushed from this repository."
+          echo "   - If you prefer the Space to use a pre-built image from Docker Hub/GHCR directly,"
+          echo "     you would need to modify the Space's configuration (e.g., its own README.md's YAML frontmatter)"
+          echo "     to point to the desired image tag (e.g., ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:sha-${{ steps.vars.outputs.sha }})."
+          echo "     This workflow currently uploads the Dockerfile for the Space to build itself."
+          echo "---------------------------------------------------------------------"
+
+    # Step 8: Define outputs for the job (optional)
+    # These outputs can be used by other jobs in the workflow if needed.
+    outputs:
+      docker_image_tag_sha: ${{ secrets.DOCKERHUB_USERNAME && format('docker.io/{0}/{1}:sha-{2}', secrets.DOCKERHUB_USERNAME, github.event.repository.name, steps.vars.outputs.sha) || '' }}
+      ghcr_image_tag_sha: ghcr.io/${{ github.repository_owner }}/${{ github.event.repository.name }}:sha-${{ steps.vars.outputs.sha }}
