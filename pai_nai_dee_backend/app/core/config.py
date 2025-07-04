@@ -25,7 +25,18 @@ class Settings(BaseSettings):
     DATABASE_URL: Optional[str] = None  # Allow override via .env
 
     # Test Database URL (defaults to SQLite in-memory for tests if not set)
-    TEST_DATABASE_URL: str = "sqlite:///./test.db"  # Or "sqlite:///:memory:"
+    # TEST_DATABASE_URL: str = "sqlite:///./test.db"  # Or "sqlite:///:memory:" # Commented out for new PostgreSQL test config
+
+    # PostgreSQL Test Database settings
+    TEST_POSTGRES_USER: str = "test_user"
+    TEST_POSTGRES_PASSWORD: str = "test_password"
+    TEST_POSTGRES_SERVER: str = "localhost"
+    TEST_POSTGRES_PORT: str = "5433"  # Different port for test DB server if needed
+    TEST_POSTGRES_DB_MAIN: str = "pai_nai_dee_test_template" # Main DB that acts as a template
+
+    # This will be dynamically constructed in conftest.py for each test session/run
+    # but we need a placeholder or a default if someone tries to access it directly from settings
+    TEST_DATABASE_URL: Optional[str] = None
 
     # Dynamically construct DATABASE_URL if not explicitly set
     from pydantic import model_validator

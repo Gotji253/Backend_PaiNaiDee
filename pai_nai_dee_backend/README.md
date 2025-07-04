@@ -153,11 +153,55 @@ pai_nai_dee_backend/
 ### Running Tests
 
 -   Tests are located in the `tests/` directory and use `pytest`.
+-   The test suite includes API tests and database-specific tests (for stored procedures, triggers, and migrations).
 -   To run all tests, from the `pai_nai_dee_backend` directory:
     ```bash
     pytest
     ```
--   The tests will use a separate test database (defined by `TEST_DATABASE_URL` in `app/core/config.py`, defaulting to `sqlite:///./test.db`). This database is created and torn down automatically by the test suite.
+-   By default, API tests might still use a SQLite database as per original setup if `TEST_DATABASE_URL` is not overridden by PostgreSQL settings for all tests. The new database tests specifically target PostgreSQL.
+
+### Setting up for Database Tests (PostgreSQL)
+
+The database tests (`tests/db/`) require a running PostgreSQL instance and specific environment variables to be set. These tests will create a template database and then clone it for each test function, ensuring test isolation.
+
+1.  **Ensure PostgreSQL is running and accessible.** You can use Docker:
+    ```bash
+    docker run --name painaidee-test-postgres -e POSTGRES_USER=test_user -e POSTGRES_PASSWORD=test_password -p 5433:5432 -d postgres:13
+    ```
+    Adjust `POSTGRES_USER` and `POSTGRES_PASSWORD` if you use different values in your `.env` file for testing. The port `5433` is used here to avoid conflict with a potential default development PostgreSQL on `5432`.
+
+2.  **Set Environment Variables for Testing:**
+    These variables are defined in `app/core/config.py` and should be set in your environment or in the `.env` file (which is loaded by Pydantic settings).
+    -   `TEST_POSTGRES_USER`: Username for the PostgreSQL test server (e.g., `test_user`). This user needs `CREATEDB` privileges.
+    -   `TEST_POSTGRES_PASSWORD`: Password for the test user.
+    -   `TEST_POSTGRES_SERVER`: Hostname or IP of the test PostgreSQL server (e.g., `localhost`).
+    -   `TEST_POSTGRES_PORT`: Port of the test PostgreSQL server (e.g., `5433`).
+    -   `TEST_POSTGRES_DB_MAIN`: Name for the template database that will be created and migrated (e.g., `painaidee_test_template`).
+
+    Example for your `.env` file:
+    ```env
+    # ... other variables ...
+
+    # For PostgreSQL Database Tests
+    TEST_POSTGRES_USER=test_user
+    TEST_POSTGRES_PASSWORD=test_password
+    TEST_POSTGRES_SERVER=localhost
+    TEST_POSTGRES_PORT=5433
+    TEST_POSTGRES_DB_MAIN=painaidee_test_template
+    ```
+    Ensure these match the user/password you used when starting your PostgreSQL test instance if you are managing it manually or via Docker. The `test_user` must have permissions to create new databases on the PostgreSQL server.
+
+3.  **Running Specific Test Types:**
+    -   To run only database tests:
+        ```bash
+        pytest tests/db
+        ```
+    -   To run only API tests:
+        ```bash
+        pytest tests/api
+        ```
+
+-   The database test setup (`tests/conftest.py`) handles the creation of a template database (`TEST_POSTGRES_DB_MAIN`) with all migrations applied. Then, for each test function in `tests/db/`, a new database is cloned from this template and dropped after the test, providing a clean environment.
 
 ## API Endpoints
 
