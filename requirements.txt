@@ -1,0 +1,11 @@
+fastapi
+uvicorn[standard]
+sqlalchemy
+psycopg2-binary
+pydantic
+python-jose[cryptography]
+passlib[bcrypt]
+pytest
+httpx # For testing FastAPI applications
+python-dotenv # For managing environment variables
+alembic # For database migrations (good practice, though I might not implement full migrations in this scope)
