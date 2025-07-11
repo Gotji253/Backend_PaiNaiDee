@@ -57,15 +57,6 @@ jobs:
     #     echo "Alembic check placeholder - implement if needed"
 
     - name: Run Pytest
-      env:
-        # If your tests need specific env vars, set them here.
-        # Example: DATABASE_URL: ${{ secrets.TEST_DATABASE_URL_CI }} # If using a CI-specific DB
-        # For SQLite test.db, usually no specific env var is needed if config defaults are fine.
-        # TESTING: "1" # conftest.py already sets os.environ["TESTING"] = "1"
-        # SECRET_KEY: "test_secret_key_for_ci" # If needed and not hardcoded/defaulted safely for tests
-        # Ensure your config.py handles test environment appropriately
-        # Our config uses TEST_DATABASE_URL which defaults to sqlite:///./test.db
-        pass # No specific env vars needed for now based on current test setup
       run: |
         pytest # Pytest will discover tests in the current (working) directory
         # (which is pai_nai_dee_backend/ due to defaults.run.working-directory)
