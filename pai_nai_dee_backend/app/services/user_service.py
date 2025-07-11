@@ -1,76 +1,100 @@
 from sqlalchemy.orm import Session
-from fastapi import Depends # Import Depends
+from fastapi import HTTPException, status
+from typing import List, Optional
 
-# from app import crud, schemas, models
-# from app.core.security import get_password_hash # Example import
+from app import crud, schemas
+from app.models.user import User as UserModel
 
 
 class UserService:
     def __init__(self, db: Session):
         self.db = db
 
-    # Example of a more complex operation that might be in a service:
-    # def register_new_user_with_welcome_email(self, user_in: schemas.UserCreate) -> models.User:
-    #     # Check for existing user (could also be in CRUD or router, depends on flow)
-    #     existing_user = crud.crud_user.get_user_by_username(self.db, username=user_in.username)
-    #     if existing_user:
-    #         # raise appropriate exception
-    #         pass
-    #
-    #     user = crud.crud_user.create_user(self.db, user_in=user_in)
-    #
-    #     # Send welcome email (pseudo-code)
-    #     # email_service.send_welcome_email(to=user.email, username=user.username)
-    #
-    #     return user
-
-    # Placeholder for future user-related business logic
-    def get_user_profile_details(self, user_id: int):
+    def create_new_user(self, user_in: schemas.UserCreate) -> UserModel:
         """
-        Example: Fetches user and formats a more complex profile,
-        potentially aggregating data from other services or models.
+        Creates a new user after validating username and email uniqueness.
         """
-        # user = crud.crud_user.get_user(self.db, user_id)
-        # if not user:
-        #     return None
-        # # ... more logic ...
-        # return {"username": user.username, "email": user.email, "total_reviews": len(user.reviews)}
-        pass
+        existing_user_by_username = crud.user.get_user_by_username(self.db, username=user_in.username)
+        if existing_user_by_username:
+            raise HTTPException(
+                status_code=status.HTTP_400_BAD_REQUEST,
+                detail="The user with this username already exists in the system.",
+            )
+        if user_in.email:
+            existing_user_by_email = crud.user.get_user_by_email(self.db, email=user_in.email)
+            if existing_user_by_email:
+                raise HTTPException(
+                    status_code=status.HTTP_400_BAD_REQUEST,
+                    detail="The user with this email already exists in the system.",
+                )
 
+        user = crud.user.create_user(db=self.db, user_in=user_in)
+        return user
 
-def get_user_service(db: Session = Depends(lambda: None)) -> UserService:  # type: ignore
-    """
-    Dependency injector for UserService.
-    Allows db session to be injected if this service is used as a FastAPI dependency.
-    For now, it's instantiated directly where needed.
-    """
-    # This is a bit tricky. If services are used as FastAPI Depends, they need this.
-    # If they are instantiated directly by routers, the router provides the db session.
-    # Let's assume for now they might be instantiated by routers/other services.
-    # To make it usable as a FastAPI dependency:
-    # from app.db.database import (
-    #     get_db,
-    # )  # Local import to avoid circular if service used globally. F401: Unused.
-    # from fastapi import Depends as FastAPI今のDepends  # Alias to avoid conflict. F401: Unused.
+    def get_user_by_id(self, user_id: int) -> Optional[UserModel]:
+        """
+        Retrieves a user by their ID.
+        """
+        user = crud.user.get_user(self.db, user_id=user_id)
+        if not user:
+            raise HTTPException(
+                status_code=status.HTTP_404_NOT_FOUND,
+                detail="The user with this id does not exist in the system.",
+            )
+        return user
 
-    # This pattern is more if the service itself is a FastAPI dependency.
-    # def get_user_service_dependency(db: Session = FastAPI今のDepends(get_db)):
-    #    return UserService(db)
-    # return get_user_service_dependency
+    def get_all_users(self, skip: int = 0, limit: int = 100) -> List[UserModel]:
+        """
+        Retrieves a list of users.
+        """
+        users = crud.user.get_users(self.db, skip=skip, limit=limit)
+        return users
 
-    # If services are meant to be instantiated manually in routers:
-    # router: db_session = Depends(get_db)
-    # user_service = UserService(db_session)
-    # For now, let's not make it a FastAPI dependency itself.
-    # Routers will get db session and pass it to service constructor.
-    pass
+    def update_existing_user(self, user_id: int, user_in: schemas.UserUpdate) -> Optional[UserModel]:
+        """
+        Updates an existing user's information.
+        Handles username and email conflict checks.
+        """
+        db_user = self.get_user_by_id(user_id) # This will raise 404 if not found
+        if not db_user: # Should be caught by get_user_by_id, but defensive
+            return None
 
+        # Check for email conflict if email is being updated
+        if user_in.email and db_user.email != user_in.email:
+            existing_user_by_email = crud.user.get_user_by_email(self.db, email=user_in.email)
+            if existing_user_by_email and existing_user_by_email.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Another user with this email already exists.",
+                )
 
-# Example of how a router might use it:
-# from app.services.user_service import UserService
-# from app.db.database import get_db
-#
-# @router.post("/users/register_special")
-# def register_user_special(user_in: schemas.UserCreate, db: Session = Depends(get_db)):
-#     user_service = UserService(db)
-#     return user_service.register_new_user_with_welcome_email(user_in)
+        # Check for username conflict if username is being updated
+        if user_in.username and db_user.username != user_in.username:
+            existing_user_by_username = crud.user.get_user_by_username(
+                self.db, username=user_in.username
+            )
+            if existing_user_by_username and existing_user_by_username.id != user_id:
+                raise HTTPException(
+                    status_code=status.HTTP_409_CONFLICT,
+                    detail="Another user with this username already exists.",
+                )
+
+        updated_user = crud.user.update_user(db=self.db, db_user=db_user, user_in=user_in)
+        return updated_user
+
+    def delete_existing_user(self, user_id: int) -> Optional[UserModel]:
+        """
+        Deletes a user by their ID.
+        """
+        user_to_delete = self.get_user_by_id(user_id) # This will raise 404 if not found
+        if not user_to_delete: # Should be caught by get_user_by_id
+            return None
+
+        deleted_user = crud.user.delete_user(db=self.db, user_id=user_id)
+        # crud.user.delete_user already returns the user or None if not found after trying to get it.
+        # The self.get_user_by_id ensures it exists before calling crud.delete.
+        return deleted_user
+
+# It's common to instantiate services directly in the endpoint handlers
+# by passing the db session, rather than making the service itself a complex dependency.
+# So, the get_user_service factory might not be needed if we follow that pattern.

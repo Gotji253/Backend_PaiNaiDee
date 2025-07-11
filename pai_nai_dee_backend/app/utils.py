@@ -1,2 +1,5 @@
+import logging
+
 # Utility functions
-print("Hello from utils.py")
+logger = logging.getLogger(__name__)
+logger.debug("Hello from utils.py - This is a debug message.")

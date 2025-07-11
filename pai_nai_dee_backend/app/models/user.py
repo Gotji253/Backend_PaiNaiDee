@@ -1,6 +1,8 @@
-from sqlalchemy import Column, Integer, String  # Table, ForeignKey removed
+from sqlalchemy import Column, Integer, String, Enum as SQLAlchemyEnum
 from sqlalchemy.orm import relationship
 # JSONB import removed as it's unused in this file
+# Import UserRole to use its values in the default for the column
+from app.schemas.user import UserRole
 # from sqlalchemy.dialects.postgresql import (
 #     JSONB,
 # )  # For list of strings, if using PostgreSQL
@@ -27,6 +29,7 @@ class User(Base):
     username = Column(String, unique=True, index=True, nullable=False)
     email = Column(String, unique=True, index=True, nullable=True)  # Added email
     hashed_password = Column(String, nullable=False)  # For authentication
+    role = Column(SQLAlchemyEnum(UserRole), nullable=False, default=UserRole.USER) # Added role
 
     # interests: Column(String) # Example: "food,travel,history" - needs parsing
     # Or using JSON for databases that support it well:

@@ -1,5 +1,5 @@
-from pydantic import BaseModel
-from typing import Optional # List removed
+from pydantic import BaseModel, constr, PositiveInt, Field
+from typing import Optional
 
 # Forward declaration for Review and Itinerary schemas if they are included here.
 # from .review import Review # Example if Review schema is needed
@@ -8,12 +8,12 @@ from typing import Optional # List removed
 
 # Shared properties
 class PlaceBase(BaseModel):
-    name: str
-    description: Optional[str] = None
-    category: Optional[str] = None
-    latitude: Optional[float] = None
-    longitude: Optional[float] = None
-    address: Optional[str] = None
+    name: constr(min_length=1, max_length=100)
+    description: Optional[constr(max_length=1000)] = None
+    category: Optional[constr(max_length=50)] = None
+    latitude: Optional[float] = Field(None, ge=-90.0, le=90.0)
+    longitude: Optional[float] = Field(None, ge=-180.0, le=180.0)
+    address: Optional[constr(max_length=255)] = None
     # average_rating will likely be calculated or come from DB, not set directly on create/update often
 
 
@@ -29,8 +29,8 @@ class PlaceUpdate(PlaceBase):
 
 # Properties shared by models stored in DB
 class PlaceInDBBase(PlaceBase):
-    id: int
-    average_rating: float = 0.0
+    id: PositiveInt
+    average_rating: float = Field(0.0, ge=0.0, le=5.0)
 
     class Config:
         from_attributes = True

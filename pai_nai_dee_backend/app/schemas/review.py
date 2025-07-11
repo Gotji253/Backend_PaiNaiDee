@@ -1,4 +1,4 @@
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, Field, PositiveInt, constr
 from typing import Optional
 from datetime import datetime
 
@@ -6,12 +6,12 @@ from datetime import datetime
 # Shared properties
 class ReviewBase(BaseModel):
     rating: float = Field(..., ge=0.5, le=5.0, description="Rating between 0.5 and 5.0")
-    comment: Optional[str] = None
+    comment: Optional[constr(max_length=1000)] = None
 
 
 # Properties to receive on creation
 class ReviewCreate(ReviewBase):
-    place_id: int  # User provides this to link review to a place
+    place_id: PositiveInt  # User provides this to link review to a place
     # user_id will be taken from current authenticated user, not from payload
 
 
@@ -22,14 +22,14 @@ class ReviewUpdate(BaseModel):
     rating: Optional[float] = Field(
         None, ge=0.5, le=5.0, description="Rating between 0.5 and 5.0"
     )
-    comment: Optional[str] = None
+    comment: Optional[constr(max_length=1000)] = None
 
 
 # Properties shared by models stored in DB
 class ReviewInDBBase(ReviewBase):
-    id: int
-    user_id: int
-    place_id: int
+    id: PositiveInt
+    user_id: PositiveInt
+    place_id: PositiveInt
     created_at: datetime
     updated_at: Optional[datetime] = None
 

@@ -1,4 +1,4 @@
-from pydantic import BaseModel
+from pydantic import BaseModel, constr, PositiveInt
 from typing import Optional, List
 from datetime import datetime
 
@@ -8,24 +8,24 @@ from datetime import datetime
 
 # Shared properties
 class ItineraryBase(BaseModel):
-    name: str
-    description: Optional[str] = None
+    name: constr(min_length=1, max_length=100)
+    description: Optional[constr(max_length=500)] = None
 
 
 # Properties to receive on creation
 class ItineraryCreate(ItineraryBase):
-    place_ids: List[int] = []  # List of place IDs to include in this itinerary
+    place_ids: List[PositiveInt] = []  # List of place IDs to include in this itinerary
 
 
 # Properties to receive on update
 class ItineraryUpdate(ItineraryBase):
-    place_ids: Optional[List[int]] = None  # Allow updating the list of places
+    place_ids: Optional[List[PositiveInt]] = None  # Allow updating the list of places
 
 
 # Properties shared by models stored in DB
 class ItineraryInDBBase(ItineraryBase):
-    id: int
-    user_id: int
+    id: PositiveInt
+    user_id: PositiveInt
     created_at: datetime
     updated_at: Optional[datetime] = None
 

@@ -1,150 +1,151 @@
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, Depends, HTTPException, status # Removed HTTPException as it's handled in service
 from sqlalchemy.orm import Session
 from typing import List, Any
 
-from app import schemas  # Updated import
-from app import crud  # Updated import
-from app.db.database import get_db  # For DB session dependency
-from app.core.security import get_current_active_user  # For protected routes
-from app.models.user import User as UserModel  # For current user type hint
+from app import schemas
+from app.db.database import get_db
+from app.core.security import get_current_active_user, require_role # Added require_role
+from app.schemas.user import UserRole # Added UserRole for RBAC
+from app.models.user import User as UserModel
+from app.services.user_service import UserService # Import UserService
 
 router = APIRouter()
 
 
-@router.post("/", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+# Dependency to get UserService instance
+def get_user_service(db: Session = Depends(get_db)) -> UserService:
+    return UserService(db)
+
+
+@router.post(
+    "/",
+    response_model=schemas.User,
+    status_code=status.HTTP_201_CREATED,
+    summary="Create a new user",
+    description="Creates a new user in the system. Currently open, but typically this would be admin-only or part of a registration flow."
+)
 def create_user(
     *,
-    db: Session = Depends(get_db),
+    user_service: UserService = Depends(get_user_service),
     user_in: schemas.UserCreate,
+    # current_user: UserModel = Depends(require_role([UserRole.ADMIN])) # Example: Only admins can create users
 ) -> Any:
     """
     Create new user.
+    Open for now, but ideally, this should be protected (e.g., admin only or part of a public registration flow).
     """
-    user = crud.crud_user.get_user_by_username(db, username=user_in.username)
-    if user:
-        raise HTTPException(
-            status_code=status.HTTP_400_BAD_REQUEST,
-            detail="The user with this username already exists in the system.",
-        )
-    if user_in.email:
-        user_by_email = crud.crud_user.get_user_by_email(db, email=user_in.email)
-        if user_by_email:
-            raise HTTPException(
-                status_code=status.HTTP_400_BAD_REQUEST,
-                detail="The user with this email already exists in the system.",
-            )
-
-    user = crud.crud_user.create_user(db=db, user_in=user_in)
+    # Note: RBAC for user creation can be complex. Public registration vs admin creation.
+    # For now, leaving it open and relying on service-layer validation for duplicates.
+    user = user_service.create_new_user(user_in=user_in)
     return user
 
 
-@router.get("/", response_model=List[schemas.User])
+@router.get(
+    "/",
+    response_model=List[schemas.User],
+    summary="Retrieve all users (Admin only)",
+    description="Retrieves a list of all users. This endpoint is restricted to users with the ADMIN role."
+)
 def read_users(
-    db: Session = Depends(get_db),
+    user_service: UserService = Depends(get_user_service),
     skip: int = 0,
     limit: int = 100,
-    current_user: UserModel = Depends(
-        get_current_active_user
-    ),  # To protect this endpoint
+    current_user: UserModel = Depends(require_role([UserRole.ADMIN])), # Only admins can list all users
 ) -> Any:
     """
-    Retrieve users. (ADMINS ONLY - TODO: Implement proper role check)
+    Retrieve users. (ADMINS ONLY)
     """
-    # Example of a superuser check (assuming is_superuser is a method in crud_user or a model property)
-    # if not crud.crud_user.is_superuser(current_user):
-    #     raise HTTPException(status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions")
-    # For now, any authenticated user can access this. This needs to be locked down.
-    users = crud.crud_user.get_users(db, skip=skip, limit=limit)
+    users = user_service.get_all_users(skip=skip, limit=limit)
     return users
 
 
-@router.get("/{user_id}", response_model=schemas.User)
+@router.get(
+    "/{user_id}",
+    response_model=schemas.User,
+    summary="Get a specific user by ID",
+    description="Retrieves information for a specific user by their ID. Users can retrieve their own information. Admins can retrieve any user's information."
+)
 def read_user_by_id(
     user_id: int,
-    db: Session = Depends(get_db),
-    current_user: UserModel = Depends(get_current_active_user),  # For authorization
+    user_service: UserService = Depends(get_user_service),
+    current_user: UserModel = Depends(get_current_active_user),
 ) -> Any:
     """
-    Get a specific user by id. (User can get themselves, or admin can get any)
+    Get a specific user by id.
+    A user can get their own info, or an admin can get any user's info.
     """
-    user = crud.crud_user.get_user(db, user_id=user_id)
-    if not user:
+    # Authorization: User can get themselves, or admin can get any.
+    if current_user.id != user_id and current_user.role != UserRole.ADMIN:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="The user with this id does not exist in the system",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to access this user's information.",
         )
-    # if user != current_user and not crud.user.is_superuser(current_user): # Example check
-    #     raise HTTPException(status_code=403, detail="Not enough permissions")
+    user = user_service.get_user_by_id(user_id=user_id)
+    # Service method already raises HTTPException 404 if not found
     return user
 
 
-@router.put("/{user_id}", response_model=schemas.User)
+@router.put(
+    "/{user_id}",
+    response_model=schemas.User,
+    summary="Update a user",
+    description="Updates a user's information. Users can update their own information. Admins can update any user's information, including their role. Non-admins cannot change their own role."
+)
 def update_user(
     *,
-    db: Session = Depends(get_db),
     user_id: int,
     user_in: schemas.UserUpdate,
-    current_user: UserModel = Depends(get_current_active_user),  # For authorization
+    user_service: UserService = Depends(get_user_service),
+    current_user: UserModel = Depends(get_current_active_user),
 ) -> Any:
     """
-    Update a user. (User can update themselves, or admin can update any)
+    Update a user.
+    A user can update themselves, or an admin can update any user.
     """
-    db_user = crud.crud_user.get_user(db, user_id=user_id)
-    if not db_user:
+    # Authorization: User can update themselves, or admin can update any.
+    if current_user.id != user_id and current_user.role != UserRole.ADMIN:
         raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="The user with this id does not exist in the system",
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Not enough permissions to update this user.",
         )
-    # if db_user != current_user and not crud.user.is_superuser(current_user): # Example check
-    #    raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    # Check for email conflict if email is being updated
-    if user_in.email and db_user.email != user_in.email:
-        existing_user = crud.crud_user.get_user_by_email(db, email=user_in.email)
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Another user with this email already exists.",
-            )
-
-    # Check for username conflict if username is being updated
-    if user_in.username and db_user.username != user_in.username:
-        existing_user = crud.crud_user.get_user_by_username(
-            db, username=user_in.username
+    # Prevent non-admin users from changing their role
+    if current_user.role != UserRole.ADMIN and user_in.role is not None and user_in.role != current_user.role:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="Users cannot change their own role.",
         )
-        if existing_user and existing_user.id != user_id:
-            raise HTTPException(
-                status_code=status.HTTP_409_CONFLICT,
-                detail="Another user with this username already exists.",
-            )
 
-    user = crud.crud_user.update_user(db=db, db_user=db_user, user_in=user_in)
+    # Admins should be able to set roles. If user_in.role is None, it won't be updated by Pydantic's exclude_unset.
+    # If an admin is updating another user and doesn't provide 'role', it remains unchanged.
+    # If an admin provides 'role', it will be updated by the service->crud layer.
+
+    user = user_service.update_existing_user(user_id=user_id, user_in=user_in)
+    # Service method handles 404 and conflict HTTPExceptions
     return user
 
 
-@router.delete("/{user_id}", response_model=schemas.User)
+@router.delete(
+    "/{user_id}",
+    response_model=schemas.User,
+    summary="Delete a user (Admin only)",
+    description="Deletes a user from the system. This endpoint is restricted to users with the ADMIN role."
+)
 def delete_user(
     *,
-    db: Session = Depends(get_db),
     user_id: int,
-    current_user: UserModel = Depends(get_current_active_user),  # For authorization
+    user_service: UserService = Depends(get_user_service),
+    current_user: UserModel = Depends(require_role([UserRole.ADMIN])), # Example: Only admins can delete users
 ) -> Any:
     """
-    Delete a user. (ADMINS ONLY - TODO: Implement proper role check, or user can delete self)
+    Delete a user. (ADMINS ONLY - Specific RBAC applied)
     """
-    user_to_delete = crud.crud_user.get_user(db, user_id=user_id)
-    if not user_to_delete:
-        raise HTTPException(status_code=404, detail="User not found")
-
-    # Add permission checks here, e.g., only admin or the user themselves can delete
-    # if user_to_delete.id != current_user.id and not crud.user.is_superuser(current_user):
-    #     raise HTTPException(status_code=403, detail="Not enough permissions to delete this user")
-
-    deleted_user = crud.crud_user.delete_user(db=db, user_id=user_id)
-    if (
-        not deleted_user
-    ):  # Should not happen if previous check passed, but as a safeguard
-        raise HTTPException(
-            status_code=404, detail="User not found during delete operation"
-        )
+    # Further checks can be added here if needed, e.g., admin cannot delete themselves.
+    # if current_user.id == user_id:
+    #     raise HTTPException(
+    #         status_code=status.HTTP_403_FORBIDDEN,
+    #         detail="Admins cannot delete themselves through this endpoint.",
+    #     )
+    deleted_user = user_service.delete_existing_user(user_id=user_id)
+    # Service method handles 404
     return deleted_user

@@ -6,13 +6,16 @@ from fastapi import Depends, HTTPException, status
 from fastapi.security import OAuth2PasswordBearer
 from sqlalchemy.orm import Session
 
+from typing import List # Added List
+
 # Pydantic BaseModel might not be needed here anymore if TokenData is the only schema used from app.schemas
 # from pydantic import BaseModel
 
 from app.core.config import settings
 # verify_password removed, will be imported directly where needed from password_utils
 from app.db.database import get_db
-from app.schemas import TokenData  # Corrected import (app.schemas.token.TokenData)
+from app.schemas import TokenData # Corrected import (app.schemas.token.TokenData)
+from app.schemas.user import UserRole # Added UserRole for RBAC
 from app.crud import crud_user  # Corrected import (app.crud.crud_user)
 from app.models.user import User as UserModel
 
@@ -77,6 +80,28 @@ async def get_current_active_user(
     #     raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
     return current_user
 
+
+# RBAC Dependency
+def require_role(allowed_roles: List[UserRole]):
+    """
+    Dependency that checks if the current user has one of the allowed roles.
+    """
+
+    async def role_checker(
+        current_user: UserModel = Depends(get_current_active_user),
+    ) -> UserModel:
+        if current_user.role not in allowed_roles:
+            raise HTTPException(
+                status_code=status.HTTP_403_FORBIDDEN,
+                detail=f"User does not have the required role. Allowed roles: {', '.join([role.value for role in allowed_roles])}",
+            )
+        return current_user
+
+    return role_checker
+
+
+# Example for checking if a user is an admin - can be used directly in path operations
+# require_admin_role = require_role([UserRole.ADMIN])
 
 # Optional: For superuser checks (if roles/superuser status is implemented)
 # async def get_current_active_superuser(

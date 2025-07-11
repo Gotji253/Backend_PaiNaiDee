@@ -1,35 +1,38 @@
-from fastapi import APIRouter, Depends, HTTPException, status, Query
+from fastapi import APIRouter, Depends, HTTPException, status, Query # Removed HTTPException
 from sqlalchemy.orm import Session
 from typing import List, Any, Optional
 
-from app import schemas  # Updated import
-from app import crud  # Updated import
+from app import schemas
 from app.db.database import get_db
-from app.core.security import get_current_active_user  # For protected routes
-from app.models.user import User as UserModel  # For current user type hint
+from app.core.security import get_current_active_user, require_role # Added require_role
+from app.schemas.user import UserRole # Added UserRole
+from app.models.user import User as UserModel
+from app.services.place_service import PlaceService # Import PlaceService
 
 router = APIRouter()
+
+# Dependency to get PlaceService instance
+def get_place_service(db: Session = Depends(get_db)) -> PlaceService:
+    return PlaceService(db)
 
 
 @router.post("/", response_model=schemas.Place, status_code=status.HTTP_201_CREATED)
 def create_place(
     *,
-    db: Session = Depends(get_db),
+    place_service: PlaceService = Depends(get_place_service),
     place_in: schemas.PlaceCreate,
-    current_user: UserModel = Depends(
-        get_current_active_user
-    )  # Place creation needs auth
+    current_user: UserModel = Depends(require_role([UserRole.ADMIN, UserRole.EDITOR]))
 ) -> Any:
     """
-    Create new place. Requires authentication.
+    Create new place. Requires ADMIN or EDITOR role.
     """
-    place = crud.crud_place.create_place(db=db, place_in=place_in)
+    place = place_service.create_new_place(place_in=place_in)
     return place
 
 
 @router.get("/", response_model=List[schemas.Place])
 def read_places(
-    db: Session = Depends(get_db),
+    place_service: PlaceService = Depends(get_place_service),
     skip: int = 0,
     limit: int = 100,
     category: Optional[str] = Query(
@@ -41,9 +44,10 @@ def read_places(
 ) -> Any:
     """
     Retrieve places with optional filtering by category and minimum rating.
+    Publicly accessible.
     """
-    places = crud.crud_place.get_places(
-        db, skip=skip, limit=limit, category=category, min_rating=min_rating
+    places = place_service.get_all_places(
+        skip=skip, limit=limit, category=category, min_rating=min_rating
     )
     return places
 
@@ -51,64 +55,45 @@ def read_places(
 @router.get("/{place_id}", response_model=schemas.Place)
 def read_place_by_id(
     place_id: int,
-    db: Session = Depends(get_db),
+    place_service: PlaceService = Depends(get_place_service),
 ) -> Any:
     """
-    Get a specific place by id.
+    Get a specific place by id. Publicly accessible.
     """
-    place = crud.crud_place.get_place(db, place_id=place_id)
-    if not place:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Place not found",
-        )
+    place = place_service.get_place_by_id(place_id=place_id)
+    # Service method raises HTTPException 404 if not found
     return place
 
 
 @router.put("/{place_id}", response_model=schemas.Place)
 def update_place(
     *,
-    db: Session = Depends(get_db),
     place_id: int,
     place_in: schemas.PlaceUpdate,
-    current_user: UserModel = Depends(
-        get_current_active_user
-    )  # Place update needs auth
+    place_service: PlaceService = Depends(get_place_service),
+    current_user: UserModel = Depends(require_role([UserRole.ADMIN, UserRole.EDITOR]))
 ) -> Any:
     """
-    Update a place. Requires authentication.
-    TODO: Add ownership or admin role check.
+    Update a place. Requires ADMIN or EDITOR role.
     """
-    db_place = crud.crud_place.get_place(db, place_id=place_id)
-    if not db_place:
-        raise HTTPException(
-            status_code=status.HTTP_404_NOT_FOUND,
-            detail="Place not found",
-        )
-    place = crud.crud_place.update_place(db=db, db_place=db_place, place_in=place_in)
+    # Additional ownership check could be added here or in the service if needed,
+    # e.g., if editors can only edit places they created.
+    # For now, ADMIN and EDITOR can edit any place.
+    place = place_service.update_existing_place(place_id=place_id, place_in=place_in)
+    # Service method raises HTTPException 404 if not found
     return place
 
 
 @router.delete("/{place_id}", response_model=schemas.Place)
 def delete_place(
     *,
-    db: Session = Depends(get_db),
     place_id: int,
-    current_user: UserModel = Depends(
-        get_current_active_user
-    )  # Place deletion needs auth
+    place_service: PlaceService = Depends(get_place_service),
+    current_user: UserModel = Depends(require_role([UserRole.ADMIN])) # Only ADMIN can delete
 ) -> Any:
     """
-    Delete a place. Requires authentication.
-    TODO: Add ownership or admin role check.
+    Delete a place. Requires ADMIN role.
     """
-    place_to_delete = crud.crud_place.get_place(db, place_id=place_id)
-    if not place_to_delete:
-        raise HTTPException(status_code=404, detail="Place not found")
-
-    deleted_place = crud.crud_place.delete_place(db=db, place_id=place_id)
-    if not deleted_place:  # Should not happen if previous check passed
-        raise HTTPException(
-            status_code=404, detail="Place not found during delete operation"
-        )
+    deleted_place = place_service.delete_existing_place(place_id=place_id)
+    # Service method raises HTTPException 404 if not found
     return deleted_place

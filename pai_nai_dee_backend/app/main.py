@@ -4,6 +4,7 @@ from fastapi.exceptions import (
     RequestValidationError,
     HTTPException as StarletteHTTPException,
 )
+from fastapi.middleware.cors import CORSMiddleware # Added CORS
 import logging  # Moved import to the top
 
 from app.core.logging import setup_logging  #  Import logging setup
@@ -12,9 +13,21 @@ from app.core.logging import setup_logging  #  Import logging setup
 setup_logging()
 
 app = FastAPI(
-    title="Pai Nai Dee API",
+    title=settings.PROJECT_NAME, # Use project name from settings
+    version=settings.PROJECT_VERSION, # Use project version from settings
     description="API for the Pai Nai Dee travel planning application.",
-    version="0.1.0",
+    # openapi_url=f"{settings.API_V1_STR}/openapi.json" # Optional: customize openapi json url
+)
+
+# CORS Middleware
+# Should be placed before routers and error handlers if possible,
+# or at least early in the middleware stack.
+app.add_middleware(
+    CORSMiddleware,
+    allow_origins=["*"],  # Allows all origins
+    allow_credentials=True,
+    allow_methods=["*"],  # Allows all methods
+    allow_headers=["*"],  # Allows all headers
 )
 
 
