@@ -10,3 +10,8 @@ pytest
 httpx # For testing FastAPI applications
 python-dotenv # For managing environment variables
 alembic # For database migrations (good practice, though I might not implement full migrations in this scope)
+
+# Development and Linting/Formatting tools
+black
+flake8
+pre-commit

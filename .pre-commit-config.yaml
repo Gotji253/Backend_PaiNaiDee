@@ -1,0 +1,22 @@
+# See https://pre-commit.com for more information
+# See https://pre-commit.com/hooks.html for more hooks
+repos:
+-   repo: https://github.com/psf/black
+    rev: 24.4.2  # Using a recent stable version of Black
+    hooks:
+    -   id: black
+        # args: [--line-length=88] # Default is 88, uncomment to customize
+        # It's good practice to align this with your project's pyproject.toml if you have one
+        # or keep it default if no specific line length is enforced otherwise.
+-   repo: https://github.com/PyCQA/flake8
+    rev: 7.1.0 # Using a recent stable version of Flake8
+    hooks:
+    -   id: flake8
+        # args: [--max-line-length=88, --ignore=E203,W503] # Example args
+        # Your CI already runs flake8 with specific options, so you might want to align these
+        # or let the CI be the stricter check. For pre-commit, a basic flake8 run is often enough.
+        # For now, I will keep it simple.
+        # The Flake8 step in CI is:
+        # flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+        # This is very specific. A general flake8 pre-commit is still useful.
+        # Users can customize .flake8 or pyproject.toml for flake8 settings.
