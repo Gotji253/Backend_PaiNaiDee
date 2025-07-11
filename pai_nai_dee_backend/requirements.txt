@@ -14,3 +14,11 @@ psycopg2-binary # For PostgreSQL
 pytest
 # pytest-asyncio removed to rely on anyio's plugin
 httpx
+
+# Static analysis tools and coverage
+black
+flake8
+mypy
+pylint
+pytest-cov
+pytest-asyncio

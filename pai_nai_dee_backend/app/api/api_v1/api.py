@@ -1,7 +1,7 @@
 from fastapi import APIRouter
 
 # Import endpoint modules here
-from app.api.endpoints import users, places, reviews, itineraries, auth
+from ..endpoints import users, places, reviews, itineraries, auth
 
 router = APIRouter()
 

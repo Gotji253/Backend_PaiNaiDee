@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
-from app.models.itinerary import Itinerary
-from app.models.place import Place  # Needed to fetch Place objects for association
-from app.schemas.itinerary import ItineraryCreate, ItineraryUpdate
+from ..models.itinerary import Itinerary
+from ..models.place import Place  # Needed to fetch Place objects for association
+from ..schemas.itinerary import ItineraryCreate, ItineraryUpdate
 
 
 class CRUDItinerary:

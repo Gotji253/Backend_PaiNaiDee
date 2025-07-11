@@ -1,6 +1,7 @@
 import pytest
 from httpx import AsyncClient  # Use AsyncClient from httpx for async app
 from fastapi import status  # For status codes
+from ..app.core.config import settings # Moved to top and made relative
 
 # Fixtures like `client` and `db` are automatically injected by pytest from conftest.py
 
@@ -30,7 +31,7 @@ async def test_api_v1_root_endpoint(client: AsyncClient):
     """
     Tests the /api/v1/ endpoint.
     """
-    from app.core.config import settings  # To get API_V1_STR
+    # from app.core.config import settings  # Moved to top
 
     response = await client.get(settings.API_V1_STR + "/")
     assert response.status_code == status.HTTP_200_OK

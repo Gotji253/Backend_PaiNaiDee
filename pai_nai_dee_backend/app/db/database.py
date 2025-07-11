@@ -2,10 +2,13 @@ from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
 
-from app.core.config import settings  # Import settings
+from ..core.config import settings  # Import settings
 
 # Use the DATABASE_URL from settings
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+
+if SQLALCHEMY_DATABASE_URL is None:
+    raise ValueError("DATABASE_URL is not set. Please check your environment or .env file.")
 
 # Adjust engine creation based on whether it's SQLite or PostgreSQL
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):

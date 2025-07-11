@@ -1,8 +1,8 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
-from app.models.place import Place
-from app.schemas.place import PlaceCreate, PlaceUpdate
+from ..models.place import Place
+from ..schemas.place import PlaceCreate, PlaceUpdate
 
 
 class CRUDPlace:

@@ -1,5 +1,5 @@
 from pydantic import BaseModel
-from typing import Optional # List removed
+from typing import Optional  # List removed
 
 # Forward declaration for Review and Itinerary schemas if they are included here.
 # from .review import Review # Example if Review schema is needed

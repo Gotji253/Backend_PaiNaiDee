@@ -3,10 +3,11 @@ from httpx import AsyncClient
 from fastapi import status
 from sqlalchemy.orm import Session  # For type hinting db fixture if used directly
 
-from app.core.config import settings
-from app.schemas.user import UserCreate  # User removed, For response validation
+from ...app.core.config import settings
+from ...app.schemas.user import UserCreate  # User removed, For response validation
+from ...app.crud import crud_user # Moved to top
 
-# from app import crud # If we need to interact with CRUD directly for setup/teardown
+# from ...app import crud # If we need to interact with CRUD directly for setup/teardown
 
 # A utility to generate unique usernames/emails for tests if needed
 # def random_lower_string() -> str:
@@ -90,7 +91,7 @@ async def test_login_for_access_token(client: AsyncClient, db: Session):
     password = "testpassword123"
 
     # Ensure user exists (could also use a fixture for this)
-    from app.crud import crud_user
+    # from ...app.crud import crud_user # Moved to top
 
     existing_user = crud_user.get_user_by_username(db, username=username)
     if not existing_user:
@@ -112,7 +113,7 @@ async def test_login_incorrect_password(client: AsyncClient, db: Session):
     email = "loginfailuser@example.com"
     password = "correctpassword"
 
-    from app.crud import crud_user
+    # from ...app.crud import crud_user # Already moved to top
 
     existing_user = crud_user.get_user_by_username(db, username=username)
     if not existing_user:

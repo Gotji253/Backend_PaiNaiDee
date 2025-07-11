@@ -2,8 +2,8 @@ from sqlalchemy import Column, Integer, String, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func
 
-from app.db.database import Base
-from app.models.place import itinerary_place_association  # Import the association table
+from ..db.database import Base
+from .place import itinerary_place_association  # Import the association table
 
 
 class Itinerary(Base):

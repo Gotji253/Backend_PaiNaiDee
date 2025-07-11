@@ -1,11 +1,12 @@
 from sqlalchemy import Column, Integer, String  # Table, ForeignKey removed
 from sqlalchemy.orm import relationship
+
 # JSONB import removed as it's unused in this file
 # from sqlalchemy.dialects.postgresql import (
 #     JSONB,
 # )  # For list of strings, if using PostgreSQL
 
-from app.db.database import Base
+from ..db.database import Base
 
 # Association table for many-to-many relationship between users and interests (if interests are predefined entities)
 # For a simple list of strings, a JSONB or similar type might be simpler if not querying interests across users.

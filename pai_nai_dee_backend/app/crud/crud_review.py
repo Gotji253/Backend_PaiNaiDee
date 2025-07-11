@@ -1,10 +1,10 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
-from app.models.review import Review
-from app.schemas.review import ReviewCreate, ReviewUpdate
+from ..models.review import Review
+from ..schemas.review import ReviewCreate, ReviewUpdate
 
-# from app.crud.crud_place import place as crud_place # For updating place average rating
+# from .crud_place import place as crud_place # For updating place average rating
 
 
 class CRUDReview:
