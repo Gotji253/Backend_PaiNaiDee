@@ -3,8 +3,9 @@ from typing import List, Optional, Union, Dict, Any
 
 from app.crud.base import CRUDBase
 from app.models.trip import Trip
-from app.models.place import Place # Needed to fetch Place objects
+from app.models.place import Place  # Needed to fetch Place objects
 from app.schemas.trip import TripCreate, TripUpdate
+
 
 class CRUDTrip(CRUDBase[Trip, TripCreate, TripUpdate]):
     def create_with_owner(
@@ -15,7 +16,7 @@ class CRUDTrip(CRUDBase[Trip, TripCreate, TripUpdate]):
             description=obj_in.description,
             start_date=obj_in.start_date,
             end_date=obj_in.end_date,
-            owner_id=owner_id # Set owner_id from the authenticated user
+            owner_id=owner_id,  # Set owner_id from the authenticated user
         )
 
         # Handle places association
@@ -50,11 +51,15 @@ class CRUDTrip(CRUDBase[Trip, TripCreate, TripUpdate]):
 
         # Handle places association update
         if "place_ids" in update_data:
-            place_ids = update_data.pop("place_ids") # Remove from update_data before super().update
-            if place_ids is not None: # If place_ids is explicitly provided (even if empty list)
+            place_ids = update_data.pop(
+                "place_ids"
+            )  # Remove from update_data before super().update
+            if (
+                place_ids is not None
+            ):  # If place_ids is explicitly provided (even if empty list)
                 # Fetch Place objects from IDs
                 places = db.query(Place).filter(Place.id.in_(place_ids)).all()
-                db_obj.places = places # Replace existing places with the new list
+                db_obj.places = places  # Replace existing places with the new list
             # If place_ids is not in update_data, places are not touched by this part
             # If place_ids is None (explicitly set to None in request), it will be handled by ORM if field is nullable or cleared.
             # Here, we assume if place_ids is in the payload, it's the definitive list.
@@ -79,5 +84,6 @@ class CRUDTrip(CRUDBase[Trip, TripCreate, TripUpdate]):
             db.commit()
             db.refresh(trip)
         return trip
+
 
 trip = CRUDTrip(Trip)

@@ -10,6 +10,7 @@ from sqlalchemy.orm import Session
 # from pydantic import BaseModel
 
 from app.core.config import settings
+
 # verify_password removed, will be imported directly where needed from password_utils
 from app.db.database import get_db
 from app.schemas import TokenData  # Corrected import (app.schemas.token.TokenData)
@@ -60,7 +61,9 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    if token_data.username is None:  #  Should be caught by payload.get("sub") check, but defensive
+    if (
+        token_data.username is None
+    ):  #  Should be caught by payload.get("sub") check, but defensive
         raise credentials_exception
 
     user = crud_user.get_user_by_username(db, username=token_data.username)

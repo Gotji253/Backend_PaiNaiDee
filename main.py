@@ -12,11 +12,14 @@ app.add_middleware(
     allow_headers=["*"],  # Allows all headers
 )
 
+
 @app.get("/")
 async def read_root():
     return {"message": "Welcome to the Travel Planner API"}
 
+
 # Placeholder for later: DB initialization, routers
 if __name__ == "__main__":
     import uvicorn
+
     uvicorn.run(app, host="0.0.0.0", port=8000)

@@ -1,5 +1,5 @@
 from sqlalchemy.orm import Session
-from fastapi import Depends # Import Depends
+from fastapi import Depends  # Import Depends
 
 # from app import crud, schemas, models
 # from app.core.security import get_password_hash # Example import

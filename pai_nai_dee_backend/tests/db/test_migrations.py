@@ -1,6 +1,7 @@
 """
 Tests for database migration scripts (Alembic).
 """
+
 import pytest
 from sqlalchemy.orm import Session
 from sqlalchemy import text, inspect
@@ -8,7 +9,9 @@ from alembic.config import Config
 from alembic import command
 import os
 
-from app.core.config import settings # To get DB connection details for direct alembic runs
+from app.core.config import (
+    settings,
+)  # To get DB connection details for direct alembic runs
 
 # Placeholder for direct alembic config if needed for specific tests
 # ALEMBIC_CONFIG_FILE = os.path.join(os.path.dirname(__file__), "../..", "alembic.ini")
@@ -40,6 +43,7 @@ def test_schema_consistency_after_template_migration(db: Session):
 
     # Add more checks for other tables and important columns/constraints as needed
 
+
 def test_alembic_upgrade_head_on_new_db(postgres_test_db_manager):
     """
     Tests if `alembic upgrade head` can run successfully on a completely new, empty database.
@@ -66,6 +70,10 @@ def test_alembic_upgrade_head_on_new_db(postgres_test_db_manager):
     # Assuming postgres_test_db_manager correctly creates and migrates the template,
     # this serves as a good indicator.
     # A more direct test would involve creating an empty DB and running alembic here.
-    print("Assuming `postgres_test_db_manager` successfully ran migrations on the template.")
-    print("A more direct test for 'alembic upgrade head' on a fresh DB could be added if needed.")
+    print(
+        "Assuming `postgres_test_db_manager` successfully ran migrations on the template."
+    )
+    print(
+        "A more direct test for 'alembic upgrade head' on a fresh DB could be added if needed."
+    )
     pass

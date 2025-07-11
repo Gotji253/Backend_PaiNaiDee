@@ -1,5 +1,6 @@
 from sqlalchemy import Column, Integer, String  # Table, ForeignKey removed
 from sqlalchemy.orm import relationship
+
 # JSONB import removed as it's unused in this file
 # from sqlalchemy.dialects.postgresql import (
 #     JSONB,

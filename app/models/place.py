@@ -3,6 +3,7 @@ from sqlalchemy.orm import relationship
 
 from app.db.base import Base
 
+
 class Place(Base):
     __tablename__ = "places"
 
@@ -12,10 +13,14 @@ class Place(Base):
     address = Column(String, nullable=True)
     latitude = Column(Float, nullable=True)
     longitude = Column(Float, nullable=True)
-    category = Column(String, index=True, nullable=True) # e.g., Restaurant, Landmark, Hotel
+    category = Column(
+        String, index=True, nullable=True
+    )  # e.g., Restaurant, Landmark, Hotel
 
     # Relationships
-    reviews = relationship("Review", back_populates="place", cascade="all, delete-orphan")
+    reviews = relationship(
+        "Review", back_populates="place", cascade="all, delete-orphan"
+    )
     # Association with Trip through an association table/object (many-to-many)
     # This will be defined in the Trip model or an association table model.
 

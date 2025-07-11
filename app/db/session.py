@@ -10,8 +10,11 @@ engine_test = None
 SessionLocalTest = None
 
 if settings.SQLALCHEMY_DATABASE_URI_TEST:
-    engine_test = create_engine(settings.SQLALCHEMY_DATABASE_URI_TEST, pool_pre_ping=True)
+    engine_test = create_engine(
+        settings.SQLALCHEMY_DATABASE_URI_TEST, pool_pre_ping=True
+    )
     SessionLocalTest = sessionmaker(autocommit=False, autoflush=False, bind=engine_test)
+
 
 def get_db():
     """

@@ -5,6 +5,7 @@ from app.crud.base import CRUDBase
 from app.models.review import Review
 from app.schemas.review import ReviewCreate, ReviewUpdate
 
+
 class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
     def create_with_owner_and_place(
         self, db: Session, *, obj_in: ReviewCreate, owner_id: int, place_id: int
@@ -15,7 +16,7 @@ class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
             rating=obj_in.rating,
             comment=obj_in.comment,
             owner_id=owner_id,
-            place_id=obj_in.place_id # or use place_id parameter directly
+            place_id=obj_in.place_id,  # or use place_id parameter directly
         )
         db.add(db_obj)
         db.commit()
@@ -51,5 +52,6 @@ class CRUDReview(CRUDBase[Review, ReviewCreate, ReviewUpdate]):
     # it can be overridden here. For now, CRUDBase.update will handle it.
     # Note: The ReviewUpdate schema already makes place_id and owner_id non-updatable
     # by not including them.
+
 
 review = CRUDReview(Review)

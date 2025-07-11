@@ -1,6 +1,7 @@
 from pydantic import BaseModel, EmailStr, ConfigDict
 from typing import Optional
 
+
 # Shared properties
 class UserBase(BaseModel):
     email: EmailStr

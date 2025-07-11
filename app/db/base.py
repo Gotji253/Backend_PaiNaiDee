@@ -13,6 +13,7 @@ convention = {
 
 metadata = MetaData(naming_convention=convention)
 
+
 @as_declarative(metadata=metadata)
 class Base:
     """Base class which provides automated table name
@@ -28,7 +29,6 @@ class Base:
         if hasattr(cls, "__tablename__"):
             return cls.__tablename__
         return cls.__name__.lower() + "s"
-
 
     id: Column = Column(Integer, primary_key=True, index=True)
 

@@ -35,15 +35,15 @@ class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
             hashed_password = get_password_hash(update_data["password"])
             update_data["hashed_password"] = hashed_password
             del update_data["password"]
-        elif "password" in update_data : # if password field is present but empty (e.g. for optional update)
+        elif (
+            "password" in update_data
+        ):  # if password field is present but empty (e.g. for optional update)
             del update_data["password"]
 
         # Call super().update() from CRUDBase for other fields
         return super().update(db, db_obj=db_obj, obj_in=update_data)
 
-    def authenticate(
-        self, db: Session, *, email: str, password: str
-    ) -> Optional[User]:
+    def authenticate(self, db: Session, *, email: str, password: str) -> Optional[User]:
         user = self.get_by_email(db, email=email)
         if not user:
             return None

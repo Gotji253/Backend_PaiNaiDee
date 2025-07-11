@@ -32,7 +32,9 @@ class Settings(BaseSettings):
     TEST_POSTGRES_PASSWORD: str = "test_password"
     TEST_POSTGRES_SERVER: str = "localhost"
     TEST_POSTGRES_PORT: str = "5433"  # Different port for test DB server if needed
-    TEST_POSTGRES_DB_MAIN: str = "pai_nai_dee_test_template" # Main DB that acts as a template
+    TEST_POSTGRES_DB_MAIN: str = (
+        "pai_nai_dee_test_template"  # Main DB that acts as a template
+    )
 
     # This will be dynamically constructed in conftest.py for each test session/run
     # but we need a placeholder or a default if someone tries to access it directly from settings

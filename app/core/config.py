@@ -3,8 +3,11 @@ from pydantic_settings import BaseSettings
 from dotenv import load_dotenv
 
 # Load .env file at the project root
-dotenv_path = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env")
+dotenv_path = os.path.join(
+    os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), ".env"
+)
 load_dotenv(dotenv_path)
+
 
 class Settings(BaseSettings):
     PROJECT_NAME: str = "Travel Planner API"
@@ -21,20 +24,24 @@ class Settings(BaseSettings):
     POSTGRES_DB_TEST: str = os.getenv("POSTGRES_DB_TEST", "travel_planner_test_db")
     SQLALCHEMY_DATABASE_URI_TEST: str | None = None
 
-
     # JWT settings
-    SECRET_KEY: str = os.getenv("SECRET_KEY", "a_very_secret_key_that_should_be_changed")
+    SECRET_KEY: str = os.getenv(
+        "SECRET_KEY", "a_very_secret_key_that_should_be_changed"
+    )
     ALGORITHM: str = "HS256"
-    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30 # 30 minutes
-    REFRESH_TOKEN_EXPIRE_DAYS: int = 7 # 7 days
+    ACCESS_TOKEN_EXPIRE_MINUTES: int = 30  # 30 minutes
+    REFRESH_TOKEN_EXPIRE_DAYS: int = 7  # 7 days
 
     # CORS settings
-    BACKEND_CORS_ORIGINS: list[str] = ["http://localhost:3000", "http://localhost:8000"] # Example origins
+    BACKEND_CORS_ORIGINS: list[str] = [
+        "http://localhost:3000",
+        "http://localhost:8000",
+    ]  # Example origins
 
     class Config:
         case_sensitive = True
         env_file = ".env"
-        env_file_encoding = 'utf-8'
+        env_file_encoding = "utf-8"
 
     def __init__(self, **values):
         super().__init__(**values)

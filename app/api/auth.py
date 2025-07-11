@@ -2,14 +2,14 @@ from datetime import timedelta
 from typing import Any
 
 from fastapi import APIRouter, Depends, HTTPException, status
-from fastapi.security import OAuth2PasswordRequestForm # For login form
+from fastapi.security import OAuth2PasswordRequestForm  # For login form
 from sqlalchemy.orm import Session
 
 from app import crud, models, schemas
-from app.api import deps # Updated import for dependencies
+from app.api import deps  # Updated import for dependencies
 from app.core import security
 from app.core.config import settings
-from app.db.session import get_db # Still need get_db for direct use in routes
+from app.db.session import get_db  # Still need get_db for direct use in routes
 
 router = APIRouter()
 
@@ -22,7 +22,9 @@ async def login_for_access_token(
     OAuth2 compatible token login, get an access token for future requests.
     Username is the email.
     """
-    user = crud.user.authenticate(db, email=form_data.username, password=form_data.password)
+    user = crud.user.authenticate(
+        db, email=form_data.username, password=form_data.password
+    )
     if not user:
         raise HTTPException(
             status_code=status.HTTP_401_UNAUTHORIZED,
@@ -30,16 +32,21 @@ async def login_for_access_token(
             headers={"WWW-Authenticate": "Bearer"},
         )
     elif not crud.user.is_active(user):
-        raise HTTPException(status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user")
+        raise HTTPException(
+            status_code=status.HTTP_400_BAD_REQUEST, detail="Inactive user"
+        )
 
     access_token_expires = timedelta(minutes=settings.ACCESS_TOKEN_EXPIRE_MINUTES)
     access_token = security.create_access_token(
-        user.email, expires_delta=access_token_expires # Using email as subject in token
+        user.email,
+        expires_delta=access_token_expires,  # Using email as subject in token
     )
     return {"access_token": access_token, "token_type": "bearer"}
 
 
-@router.post("/register", response_model=schemas.User, status_code=status.HTTP_201_CREATED)
+@router.post(
+    "/register", response_model=schemas.User, status_code=status.HTTP_201_CREATED
+)
 async def register_user(
     *,
     db: Session = Depends(get_db),
@@ -60,12 +67,15 @@ async def register_user(
 
 @router.get("/me", response_model=schemas.User)
 async def read_users_me(
-    current_user: models.User = Depends(deps.get_current_active_user) # Using dependency
+    current_user: models.User = Depends(
+        deps.get_current_active_user
+    ),  # Using dependency
 ):
     """
     Get current user.
     """
     return current_user
+
 
 # Example of a protected route requiring superuser (optional)
 # @router.get("/users", response_model=list[schemas.User])

@@ -5,6 +5,7 @@ from app.crud.base import CRUDBase
 from app.models.place import Place
 from app.schemas.place import PlaceCreate, PlaceUpdate
 
+
 class CRUDPlace(CRUDBase[Place, PlaceCreate, PlaceUpdate]):
     def get_by_name(self, db: Session, *, name: str) -> Optional[Place]:
         return db.query(Place).filter(Place.name == name).first()
@@ -21,5 +22,6 @@ class CRUDPlace(CRUDBase[Place, PlaceCreate, PlaceUpdate]):
             .limit(limit)
             .all()
         )
+
 
 place = CRUDPlace(Place)

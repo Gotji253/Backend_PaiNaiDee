@@ -1,8 +1,9 @@
 from pydantic import BaseModel, ConfigDict
 from typing import Optional, List
-from datetime import date # For date fields
+from datetime import date  # For date fields
 
-from .place import Place # To show nested Place information
+from .place import Place  # To show nested Place information
+
 
 # Shared properties
 class TripBase(BaseModel):
@@ -11,16 +12,19 @@ class TripBase(BaseModel):
     start_date: Optional[date] = None
     end_date: Optional[date] = None
 
+
 # Properties to receive on item creation
 class TripCreate(TripBase):
-    owner_id: int # Must be provided on creation
-    place_ids: Optional[List[int]] = [] # List of Place IDs to associate with the trip
+    owner_id: int  # Must be provided on creation
+    place_ids: Optional[List[int]] = []  # List of Place IDs to associate with the trip
+
 
 # Properties to receive on item update
 class TripUpdate(TripBase):
-    name: Optional[str] = None # All fields optional for update
-    owner_id: Optional[int] = None # Potentially allow changing owner (admin?)
-    place_ids: Optional[List[int]] = None # Allow updating associated places
+    name: Optional[str] = None  # All fields optional for update
+    owner_id: Optional[int] = None  # Potentially allow changing owner (admin?)
+    place_ids: Optional[List[int]] = None  # Allow updating associated places
+
 
 # Properties shared by models stored in DB
 class TripInDBBase(TripBase):
@@ -29,9 +33,11 @@ class TripInDBBase(TripBase):
     # For ORM mode, to allow direct mapping from SQLAlchemy models
     model_config = ConfigDict(from_attributes=True)
 
+
 # Properties to return to client
 class Trip(TripInDBBase):
-    places: List[Place] = [] # Return full Place objects associated with the trip
+    places: List[Place] = []  # Return full Place objects associated with the trip
+
 
 # Properties stored in DB (if different from Trip, e.g. if places were just IDs)
 class TripInDB(TripInDBBase):
