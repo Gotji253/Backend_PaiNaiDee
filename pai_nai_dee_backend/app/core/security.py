@@ -9,12 +9,13 @@ from sqlalchemy.orm import Session
 # Pydantic BaseModel might not be needed here anymore if TokenData is the only schema used from app.schemas
 # from pydantic import BaseModel
 
-from app.core.config import settings
+from .config import settings
+
 # verify_password removed, will be imported directly where needed from password_utils
-from app.db.database import get_db
-from app.schemas import TokenData  # Corrected import (app.schemas.token.TokenData)
-from app.crud import crud_user  # Corrected import (app.crud.crud_user)
-from app.models.user import User as UserModel
+from ..db.database import get_db
+from ..schemas.token import TokenData
+from ..crud import crud_user
+from ..models.user import User as UserModel
 
 
 ALGORITHM = settings.ALGORITHM
@@ -60,7 +61,9 @@ async def get_current_user(
     except JWTError:
         raise credentials_exception
 
-    if token_data.username is None:  #  Should be caught by payload.get("sub") check, but defensive
+    if (
+        token_data.username is None
+    ):  # Should be caught by payload.get("sub") check, but defensive
         raise credentials_exception
 
     user = crud_user.get_user_by_username(db, username=token_data.username)

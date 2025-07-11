@@ -3,7 +3,7 @@ from sqlalchemy.orm import relationship
 
 # from sqlalchemy.dialects.postgresql import JSONB # If needed for complex types
 
-from app.db.database import Base
+from ..db.database import Base
 
 # Association table for many-to-many relationship between itineraries and places
 itinerary_place_association = Table(

@@ -2,7 +2,7 @@ from sqlalchemy import Column, Integer, String, Float, ForeignKey, DateTime
 from sqlalchemy.orm import relationship
 from sqlalchemy.sql import func  # For default timestamp
 
-from app.db.database import Base
+from ..db.database import Base
 
 
 class Review(Base):

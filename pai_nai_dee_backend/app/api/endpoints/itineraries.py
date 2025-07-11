@@ -2,20 +2,20 @@ from fastapi import APIRouter, Depends, HTTPException, status
 from sqlalchemy.orm import Session
 from typing import List, Any
 
-from app import schemas  # Updated import
-from app import crud  # Updated import
-from app.db.database import get_db
-from app.models.user import User as UserModel
-from app.core.security import get_current_active_user  # Using actual dependency
+from ...schemas import Itinerary as ItinerarySchema, ItineraryCreate, ItineraryUpdate
+from ...crud import crud_place, crud_itinerary
+from ...db.database import get_db
+from ...models.user import User as UserModel
+from ...core.security import get_current_active_user
 
 router = APIRouter()
 
 
-@router.post("/", response_model=schemas.Itinerary, status_code=status.HTTP_201_CREATED)
+@router.post("/", response_model=ItinerarySchema, status_code=status.HTTP_201_CREATED)
 def create_itinerary(
     *,
     db: Session = Depends(get_db),
-    itinerary_in: schemas.ItineraryCreate,
+    itinerary_in: ItineraryCreate,
     current_user: UserModel = Depends(get_current_active_user),  # Requires auth
 ) -> Any:
     """
@@ -24,20 +24,20 @@ def create_itinerary(
     # Check if all place_ids exist
     if itinerary_in.place_ids:
         for place_id in itinerary_in.place_ids:
-            place = crud.crud_place.get_place(db, place_id=place_id)
+            place = crud_place.get_place(db, place_id=place_id)
             if not place:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Place with id {place_id} not found.",
                 )
 
-    itinerary = crud.crud_itinerary.create_itinerary(
+    itinerary = crud_itinerary.create_itinerary(
         db=db, itinerary_in=itinerary_in, user_id=current_user.id
     )
     return itinerary
 
 
-@router.get("/my-itineraries", response_model=List[schemas.Itinerary])
+@router.get("/my-itineraries", response_model=List[ItinerarySchema])
 def read_my_itineraries(
     db: Session = Depends(get_db),
     skip: int = 0,
@@ -47,13 +47,13 @@ def read_my_itineraries(
     """
     Get all itineraries for the current authenticated user.
     """
-    itineraries = crud.crud_itinerary.get_itineraries_by_user(
+    itineraries = crud_itinerary.get_itineraries_by_user(
         db, user_id=current_user.id, skip=skip, limit=limit
     )
     return itineraries
 
 
-@router.get("/{itinerary_id}", response_model=schemas.Itinerary)
+@router.get("/{itinerary_id}", response_model=ItinerarySchema)
 def read_itinerary_by_id(
     itinerary_id: int,
     db: Session = Depends(get_db),
@@ -65,7 +65,7 @@ def read_itinerary_by_id(
     Get a specific itinerary by id. User must be the owner.
     (Admins could have broader access - to be implemented).
     """
-    itinerary = crud.crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
+    itinerary = crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
     if not itinerary:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found"
@@ -73,7 +73,7 @@ def read_itinerary_by_id(
 
     if (
         itinerary.user_id != current_user.id
-    ):  # and not crud.user.is_superuser(current_user):
+    ):  # and not crud_user.is_superuser(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
         )
@@ -81,18 +81,18 @@ def read_itinerary_by_id(
     return itinerary
 
 
-@router.put("/{itinerary_id}", response_model=schemas.Itinerary)
+@router.put("/{itinerary_id}", response_model=ItinerarySchema)
 def update_itinerary(
     *,
     db: Session = Depends(get_db),
     itinerary_id: int,
-    itinerary_in: schemas.ItineraryUpdate,
+    itinerary_in: ItineraryUpdate,
     current_user: UserModel = Depends(get_current_active_user),  # Requires auth
 ) -> Any:
     """
     Update an itinerary. User must be the owner.
     """
-    db_itinerary = crud.crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
+    db_itinerary = crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
     if not db_itinerary:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found"
@@ -100,7 +100,7 @@ def update_itinerary(
 
     if (
         db_itinerary.user_id != current_user.id
-    ):  # and not crud.user.is_superuser(current_user):
+    ):  # and not crud_user.is_superuser(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
         )
@@ -108,20 +108,20 @@ def update_itinerary(
     # Check if all place_ids in the update exist (if provided)
     if itinerary_in.place_ids is not None:  # Check if place_ids is part of the update
         for place_id in itinerary_in.place_ids:
-            place = crud.crud_place.get_place(db, place_id=place_id)
+            place = crud_place.get_place(db, place_id=place_id)
             if not place:
                 raise HTTPException(
                     status_code=status.HTTP_404_NOT_FOUND,
                     detail=f"Place with id {place_id} not found in update payload.",
                 )
 
-    itinerary = crud.crud_itinerary.update_itinerary(
+    itinerary = crud_itinerary.update_itinerary(
         db=db, db_itinerary=db_itinerary, itinerary_in=itinerary_in
     )
     return itinerary
 
 
-@router.delete("/{itinerary_id}", response_model=schemas.Itinerary)
+@router.delete("/{itinerary_id}", response_model=ItinerarySchema)
 def delete_itinerary(
     *,
     db: Session = Depends(get_db),
@@ -131,7 +131,7 @@ def delete_itinerary(
     """
     Delete an itinerary. User must be the owner.
     """
-    db_itinerary = crud.crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
+    db_itinerary = crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
     if not db_itinerary:
         raise HTTPException(
             status_code=status.HTTP_404_NOT_FOUND, detail="Itinerary not found"
@@ -139,12 +139,12 @@ def delete_itinerary(
 
     if (
         db_itinerary.user_id != current_user.id
-    ):  # and not crud.user.is_superuser(current_user):
+    ):  # and not crud_user.is_superuser(current_user):
         raise HTTPException(
             status_code=status.HTTP_403_FORBIDDEN, detail="Not enough permissions"
         )
 
-    deleted_itinerary = crud.crud_itinerary.delete_itinerary(
+    deleted_itinerary = crud_itinerary.delete_itinerary(
         db=db, itinerary_id=itinerary_id
     )
     if not deleted_itinerary:  # Should not happen
@@ -155,24 +155,24 @@ def delete_itinerary(
 
 
 # Optional: Endpoints to manage places within an itinerary
-@router.post("/{itinerary_id}/places/{place_id}", response_model=schemas.Itinerary)
+@router.post("/{itinerary_id}/places/{place_id}", response_model=ItinerarySchema)
 def add_place_to_itinerary_endpoint(
     itinerary_id: int,
     place_id: int,
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user),
 ):
-    itinerary = crud.crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
+    itinerary = crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
     if itinerary.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    place = crud.crud_place.get_place(db, place_id=place_id)
+    place = crud_place.get_place(db, place_id=place_id)
     if not place:
         raise HTTPException(status_code=404, detail="Place not found")
 
-    updated_itinerary = crud.crud_itinerary.add_place_to_itinerary(
+    updated_itinerary = crud_itinerary.add_place_to_itinerary(
         db, itinerary_id, place_id
     )
     if not updated_itinerary:  # Should not happen if checks above pass
@@ -180,26 +180,26 @@ def add_place_to_itinerary_endpoint(
     return updated_itinerary
 
 
-@router.delete("/{itinerary_id}/places/{place_id}", response_model=schemas.Itinerary)
+@router.delete("/{itinerary_id}/places/{place_id}", response_model=ItinerarySchema)
 def remove_place_from_itinerary_endpoint(
     itinerary_id: int,
     place_id: int,
     db: Session = Depends(get_db),
     current_user: UserModel = Depends(get_current_active_user),
 ):
-    itinerary = crud.crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
+    itinerary = crud_itinerary.get_itinerary(db, itinerary_id=itinerary_id)
     if not itinerary:
         raise HTTPException(status_code=404, detail="Itinerary not found")
     if itinerary.user_id != current_user.id:
         raise HTTPException(status_code=403, detail="Not enough permissions")
 
-    place = crud.crud_place.get_place(db, place_id=place_id)
+    place = crud_place.get_place(db, place_id=place_id)
     if (
         not place
-    ):  # Technically, crud.remove_place_from_itinerary handles this, but good to check early.
+    ):  # Technically, crud_itinerary.remove_place_from_itinerary handles this, but good to check early.
         raise HTTPException(status_code=404, detail="Place not found to remove")
 
-    updated_itinerary = crud.crud_itinerary.remove_place_from_itinerary(
+    updated_itinerary = crud_itinerary.remove_place_from_itinerary(
         db, itinerary_id, place_id
     )
     if not updated_itinerary:  # This might happen if place was not in itinerary.

@@ -1,5 +1,6 @@
 from pydantic_settings import BaseSettings
 from typing import Optional
+from pydantic import model_validator  # Moved to top-level
 
 
 class Settings(BaseSettings):
@@ -32,14 +33,16 @@ class Settings(BaseSettings):
     TEST_POSTGRES_PASSWORD: str = "test_password"
     TEST_POSTGRES_SERVER: str = "localhost"
     TEST_POSTGRES_PORT: str = "5433"  # Different port for test DB server if needed
-    TEST_POSTGRES_DB_MAIN: str = "pai_nai_dee_test_template" # Main DB that acts as a template
+    TEST_POSTGRES_DB_MAIN: str = (
+        "pai_nai_dee_test_template"  # Main DB that acts as a template
+    )
 
     # This will be dynamically constructed in conftest.py for each test session/run
     # but we need a placeholder or a default if someone tries to access it directly from settings
     TEST_DATABASE_URL: Optional[str] = None
 
     # Dynamically construct DATABASE_URL if not explicitly set
-    from pydantic import model_validator
+    # from pydantic import model_validator # Moved to top
 
     @model_validator(mode="before")
     @classmethod

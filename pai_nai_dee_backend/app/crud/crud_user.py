@@ -1,9 +1,9 @@
 from sqlalchemy.orm import Session
 from typing import Optional, List
 
-from app.models.user import User
-from app.schemas.user import UserCreate, UserUpdate
-from app.core.password_utils import get_password_hash  # Import from new location
+from ..models.user import User
+from ..schemas.user import UserCreate, UserUpdate
+from ..core.password_utils import get_password_hash  # Import from new location
 
 
 class CRUDUser:
@@ -38,8 +38,8 @@ class CRUDUser:
         if (
             "password" in update_data and update_data["password"]
         ):  # Check if password is being updated
-            hashed_password = get_password_hash(update_data["password"])
-            db_user.hashed_password = hashed_password
+            new_hashed_password = get_password_hash(update_data["password"])
+            setattr(db_user, "hashed_password", new_hashed_password)
             del update_data[
                 "password"
             ]  # Remove password from dict to avoid direct model field update

@@ -6,7 +6,7 @@ from fastapi.exceptions import (
 )
 import logging  # Moved import to the top
 
-from app.core.logging import setup_logging  #  Import logging setup
+from .core.logging import setup_logging  # Import logging setup
 
 # Call logging setup at the application's entry point
 setup_logging()
@@ -29,8 +29,8 @@ async def health_check():
 
 
 # Import the main API router
-from app.api.api_v1.api import router as api_v1_router  # noqa: E402
-from app.core.config import settings  # noqa: E402
+from .api.api_v1.api import router as api_v1_router  # noqa: E402
+from .core.config import settings  # noqa: E402
 
 app.include_router(api_v1_router, prefix=settings.API_V1_STR)
 
