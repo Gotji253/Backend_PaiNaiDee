@@ -1,38 +1,30 @@
 import pytest
-from httpx import AsyncClient  # Use AsyncClient from httpx for async app
-from fastapi import status  # For status codes
-from ..app.core.config import settings # Moved to top and made relative
+from fastapi.testclient import TestClient
+from pai_nai_dee_backend.app.main import app
+from pai_nai_dee_backend.app.core.config import settings
 
-# Fixtures like `client` and `db` are automatically injected by pytest from conftest.py
+client = TestClient(app)
 
-
-@pytest.mark.asyncio
-async def test_health_check(client: AsyncClient):
+def test_health_check():
     """
     Tests the /health endpoint.
     """
-    response = await client.get("/health")
-    assert response.status_code == status.HTTP_200_OK
+    response = client.get("/health")
+    assert response.status_code == 200
     assert response.json() == {"status": "ok"}
 
-
-@pytest.mark.asyncio
-async def test_root_endpoint(client: AsyncClient):
+def test_root_endpoint():
     """
     Tests the root / endpoint.
     """
-    response = await client.get("/")
-    assert response.status_code == status.HTTP_200_OK
-    assert response.json() == {"message": "Welcome to Pai Nai Dee API"}
+    response = client.get("/")
+    assert response.status_code == 200
+    assert response.json() == {"message": f"Welcome to {settings.PROJECT_NAME}"}
 
-
-@pytest.mark.asyncio
-async def test_api_v1_root_endpoint(client: AsyncClient):
+def test_api_v1_root_endpoint():
     """
     Tests the /api/v1/ endpoint.
     """
-    # from app.core.config import settings  # Moved to top
-
-    response = await client.get(settings.API_V1_STR + "/")
-    assert response.status_code == status.HTTP_200_OK
+    response = client.get(f"{settings.API_V1_STR}/")
+    assert response.status_code == 200
     assert response.json() == {"message": "Welcome to Pai Nai Dee API v1"}

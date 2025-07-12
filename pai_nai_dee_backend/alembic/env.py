@@ -16,6 +16,8 @@ sys.path.insert(0, project_root)
 # Import your app's settings and Base model
 from app.core.config import settings  # noqa: E402
 from app.db.database import Base  # Your SQLAlchemy Base model # noqa: E402
+# Import all models here to ensure they are registered with Base
+from app.models import user, place, review, itinerary  # noqa: F401, E402
 
 # this is the Alembic Config object, which provides
 # access to the values within the .ini file in use.
@@ -28,7 +30,10 @@ if config.config_file_name is not None:
 
 # Set the SQLAlchemy URL from your application's settings
 # This overrides the sqlalchemy.url in alembic.ini
-config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+if settings.DATABASE_URL:
+    config.set_main_option("sqlalchemy.url", settings.DATABASE_URL)
+else:
+    raise ValueError("DATABASE_URL is not set in the application settings.")
 
 # Your application's Base.metadata object for 'autogenerate' support
 target_metadata = Base.metadata
