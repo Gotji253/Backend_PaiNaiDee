@@ -8,7 +8,9 @@ from ..core.config import settings  # Import settings
 SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
 
 if SQLALCHEMY_DATABASE_URL is None:
-    raise ValueError("DATABASE_URL is not set. Please check your environment or .env file.")
+    raise ValueError(
+        "DATABASE_URL is not set. Please check your environment or .env file."
+    )
 
 # Adjust engine creation based on whether it's SQLite or PostgreSQL
 if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):

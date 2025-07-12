@@ -12,8 +12,9 @@ import time  # For waiting for DB to be ready
 os.environ["TESTING"] = "1"
 
 from ..app.main import app as main_app  # Main FastAPI application # noqa: E402
-from ..app.schemas.user import UserCreate # Moved for test_user_token
-from ..app.crud import crud_user # Moved for test_user_token
+from ..app.schemas.user import UserCreate  # Moved for test_user_token
+from ..app.crud import crud_user  # Moved for test_user_token
+
 # Base removed as it's unused here. Migrations are handled by alembic.
 # from ..app.db.database import (
 #     Base,
