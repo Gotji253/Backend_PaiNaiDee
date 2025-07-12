@@ -74,7 +74,4 @@ jobs:
     - name: Build Docker image
       if: github.ref == 'refs/heads/main' # Example: only build on main branch pushes
       run: |
-        docker build -t myapp:${{ github.sha }} .
-        # docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} # If pushing to registry
-        # docker push myregistry/myapp:${{ github.sha }}
-      working-directory: ./pai_nai_dee_backend # Ensure Docker build context is correct if Dockerfile is there
+        docker build . --file pai_nai_dee_backend/Dockerfile --tag my-image-name:$(date +%s)
