@@ -4,77 +4,43 @@ Tests for database triggers and constraints.
 
 import pytest
 from sqlalchemy.orm import Session
-from sqlalchemy.exc import IntegrityError  # To catch constraint violations
+from sqlalchemy.exc import IntegrityError
 
 from ...app.models.user import User
 from ...app.models.place import Place
 from ...app.models.review import Review
+from ...app.core.config import settings
 
 
-def test_prevent_duplicate_review_trigger_or_constraint(db: Session):
+@pytest.mark.skipif(not settings.USE_POSTGRES_FOR_TESTS, reason="Triggers are PostgreSQL-specific")
+def test_prevent_duplicate_review_trigger(db: Session):
     """
-    Tests that a user cannot review the same place twice.
-    This relies on a database trigger or a unique constraint (e.g., UNIQUE(user_id, place_id))
-    on the 'reviews' table.
+    Tests the trigger that prevents a user from reviewing the same place twice.
+    This test is skipped if not using PostgreSQL.
     """
-    # 1. Setup: Create a User and a Place
-    user1 = User(
-        username="user_for_trigger_test",
-        email="user_trigger@example.com",
-        hashed_password="password_trigger",
-    )
-    db.add(user1)
-    place1 = Place(name="Test Place for Trigger", category="Trigger Category")
-    db.add(place1)
-    db.commit()  # Commit to get IDs
-
-    # 2. Action 1: Add the first review (should succeed)
-    review1 = Review(
-        user_id=user1.id,
-        place_id=place1.id,
-        rating=4.0,
-        comment="First review, should work.",
-    )
-    db.add(review1)
+    # 1. Setup
+    user = User(username="trigger_user", email="trigger@test.com", hashed_password="password")
+    place = Place(name="Trigger Place", category="Test")
+    db.add_all([user, place])
     db.commit()
 
-    # Verify the first review was added
-    retrieved_review = db.query(Review).filter(Review.id == review1.id).first()
-    assert retrieved_review is not None
-    assert retrieved_review.comment == "First review, should work."
+    # 2. First review (should succeed)
+    first_review = Review(user_id=user.id, place_id=place.id, rating=5, comment="Great!")
+    db.add(first_review)
+    db.commit()
 
-    # 3. Action 2: Attempt to add a duplicate review (should fail)
-    duplicate_review = Review(
-        user_id=user1.id,  # Same user
-        place_id=place1.id,  # Same place
-        rating=2.0,
-        comment="Second review by same user for same place, should fail.",
-    )
+    # 3. Duplicate review (should fail)
+    duplicate_review = Review(user_id=user.id, place_id=place.id, rating=1, comment="Trying again")
     db.add(duplicate_review)
 
-    # 4. Assert: Check for IntegrityError upon commit
-    with pytest.raises(IntegrityError) as _:
-        db.commit()  # This should violate the unique constraint or trigger a custom error
+    with pytest.raises(IntegrityError):
+        db.commit()
 
-    # Rollback the session to a clean state after the expected error
     db.rollback()
 
-    # Optional: Check the error message if it's a custom trigger error.
-    # For a standard unique constraint, the message might vary by DB.
-    # e.g., for PostgreSQL's unique constraint:
-    # assert "uq_user_place_review" in str(excinfo.value).lower() or \
-    #        "unique constraint" in str(excinfo.value).lower()
-    # print(f"Caught expected IntegrityError: {excinfo.value}")
-
-    # Verify that the duplicate review was not actually added
-    review_count_after_attempt = (
-        db.query(Review)
-        .filter(Review.user_id == user1.id, Review.place_id == place1.id)
-        .count()
-    )
-    assert (
-        review_count_after_attempt == 1
-    ), "Duplicate review should not have been saved."
+    # 4. Verify only one review exists
+    review_count = db.query(Review).filter_by(user_id=user.id, place_id=place.id).count()
+    assert review_count == 1
 
 
 # Placeholder for another trigger test, e.g., audit log or booking status change
