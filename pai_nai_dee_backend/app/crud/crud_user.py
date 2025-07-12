@@ -1,68 +1,47 @@
-from sqlalchemy.orm import Session
-from typing import Optional, List
+from typing import Any, Dict, Optional, Union
 
+from sqlalchemy.orm import Session
+
+from ..core.security import get_password_hash
+from ..crud.base import CRUDBase
 from ..models.user import User
 from ..schemas.user import UserCreate, UserUpdate
-from ..core.password_utils import get_password_hash  # Import from new location
 
 
-class CRUDUser:
-    def get_user(self, db: Session, user_id: int) -> Optional[User]:
-        return db.query(User).filter(User.id == user_id).first()
-
-    def get_user_by_username(self, db: Session, username: str) -> Optional[User]:
+class CRUDUser(CRUDBase[User, UserCreate, UserUpdate]):
+    def get_by_username(self, db: Session, *, username: str) -> Optional[User]:
         return db.query(User).filter(User.username == username).first()
 
-    def get_user_by_email(self, db: Session, email: str) -> Optional[User]:
+    def get_by_email(self, db: Session, *, email: str) -> Optional[User]:
         return db.query(User).filter(User.email == email).first()
 
-    def get_users(self, db: Session, skip: int = 0, limit: int = 100) -> List[User]:
-        return db.query(User).offset(skip).limit(limit).all()
-
-    def create_user(self, db: Session, *, user_in: UserCreate) -> User:
-        hashed_password = get_password_hash(user_in.password)
-        db_user = User(
-            username=user_in.username,
-            email=user_in.email,
-            hashed_password=hashed_password,
-            # interests=user_in.interests # If interests are part of UserCreate and User model
+    def create(self, db: Session, *, obj_in: UserCreate) -> User:
+        db_obj = User(
+            username=obj_in.username,
+            email=obj_in.email,
+            hashed_password=get_password_hash(obj_in.password),
         )
-        db.add(db_user)
+        db.add(db_obj)
         db.commit()
-        db.refresh(db_user)
-        return db_user
+        db.refresh(db_obj)
+        return db_obj
 
-    def update_user(self, db: Session, *, db_user: User, user_in: UserUpdate) -> User:
-        update_data = user_in.model_dump(exclude_unset=True)  # Pydantic V2
-
-        if (
-            "password" in update_data and update_data["password"]
-        ):  # Check if password is being updated
-            new_hashed_password = get_password_hash(update_data["password"])
-            setattr(db_user, "hashed_password", new_hashed_password)
-            del update_data[
-                "password"
-            ]  # Remove password from dict to avoid direct model field update
-
-        for field, value in update_data.items():
-            setattr(db_user, field, value)
-
-        db.add(db_user)
-        db.commit()
-        db.refresh(db_user)
-        return db_user
-
-    def delete_user(self, db: Session, user_id: int) -> Optional[User]:
-        user = db.query(User).get(user_id)
-        if user:
-            db.delete(user)
-            db.commit()
-        return user
+    def update(
+        self,
+        db: Session,
+        *,
+        db_obj: User,
+        obj_in: Union[UserUpdate, Dict[str, Any]]
+    ) -> User:
+        if isinstance(obj_in, dict):
+            update_data = obj_in
+        else:
+            update_data = obj_in.model_dump(exclude_unset=True)
+        if "password" in update_data:
+            hashed_password = get_password_hash(update_data["password"])
+            del update_data["password"]
+            update_data["hashed_password"] = hashed_password
+        return super().update(db, db_obj=db_obj, obj_in=update_data)
 
 
-user = CRUDUser()
-
-# Note: The get_password_hash function needs to be implemented in app.core.security
-# I will create a placeholder for app.core.security.py in this step if it's not already part of another step.
-# Plan step 10 is "Implement Basic Authentication (core/security.py, api/endpoints/auth.py)"
-# So, I will create a placeholder security.py now, and it will be fully implemented in step 10.
+user = CRUDUser(User)

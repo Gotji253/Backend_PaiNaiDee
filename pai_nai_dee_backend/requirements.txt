@@ -1,24 +1,22 @@
+# Core application dependencies
 fastapi
 uvicorn[standard]
 sqlalchemy
 pydantic[email]
 pydantic-settings
 python-multipart
-alembic  # Added Alembic
+alembic
 python-jose[cryptography]
 passlib[bcrypt]
-psycopg2-binary # For PostgreSQL
-# If using async with Alembic and SQLAlchemy, you might need:
-# greenlet  # For some async ORM operations with Alembic
-# asyncpg   # For async PostgreSQL driver
-pytest
-# pytest-asyncio removed to rely on anyio's plugin
-httpx
+psycopg2-binary
 
-# Static analysis tools and coverage
+# Testing and development tools
+pytest
+httpx
 black
 flake8
 mypy
 pylint
 pytest-cov
 pytest-asyncio
+pytest-postgresql
