@@ -13,15 +13,22 @@ from ...app.models.review import Review
 from ...app.core.config import settings
 
 
-@pytest.mark.skipif(not settings.USE_POSTGRES_FOR_TESTS, reason="Stored procedures are PostgreSQL-specific")
+@pytest.mark.skipif(
+    not settings.USE_POSTGRES_FOR_TESTS,
+    reason="Stored procedures are PostgreSQL-specific",
+)
 def test_calculate_average_rating(db: Session):
     """
     Tests the 'calculate_average_rating' stored function.
     This test is skipped if not using PostgreSQL.
     """
     # 1. Setup
-    user1 = User(username="rating_user1", email="user1@rating.com", hashed_password="pw")
-    user2 = User(username="rating_user2", email="user2@rating.com", hashed_password="pw")
+    user1 = User(
+        username="rating_user1", email="user1@rating.com", hashed_password="pw"
+    )
+    user2 = User(
+        username="rating_user2", email="user2@rating.com", hashed_password="pw"
+    )
     place = Place(name="Rating Place", category="Test")
     db.add_all([user1, user2, place])
     db.commit()

@@ -39,7 +39,12 @@ def test_schema_consistency_after_migration(db: Session):
 
     # --- Check for columns in the 'places' table ---
     place_columns = {col["name"] for col in inspector.get_columns("places")}
-    expected_place_columns = {"id", "name", "category", "location"} # Customize as needed
+    expected_place_columns = {
+        "id",
+        "name",
+        "category",
+        "location",
+    }  # Customize as needed
     assert expected_place_columns.issubset(place_columns)
 
     # --- Check for columns in the 'reviews' table ---

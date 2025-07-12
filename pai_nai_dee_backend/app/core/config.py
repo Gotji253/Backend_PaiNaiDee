@@ -34,12 +34,16 @@ class Settings(BaseSettings):
     def build_database_urls(cls, values: dict) -> dict:
         # --- Build Development DATABASE_URL ---
         if values.get("DATABASE_URL") is None:
-            values["DATABASE_URL"] = f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}:{values.get('POSTGRES_PORT')}/{values.get('POSTGRES_DB')}"
+            values["DATABASE_URL"] = (
+                f"postgresql://{values.get('POSTGRES_USER')}:{values.get('POSTGRES_PASSWORD')}@{values.get('POSTGRES_SERVER')}:{values.get('POSTGRES_PORT')}/{values.get('POSTGRES_DB')}"
+            )
 
         # --- Build Test DATABASE_URL ---
         if values.get("USE_POSTGRES_FOR_TESTS", False):
             # Construct Postgres test URL for the template DB
-            values["TEST_DATABASE_URL"] = f"postgresql://{values.get('TEST_POSTGRES_USER')}:{values.get('TEST_POSTGRES_PASSWORD')}@{values.get('TEST_POSTGRES_SERVER')}:{values.get('TEST_POSTGRES_PORT')}/{values.get('TEST_POSTGRES_DB_MAIN')}"
+            values["TEST_DATABASE_URL"] = (
+                f"postgresql://{values.get('TEST_POSTGRES_USER')}:{values.get('TEST_POSTGRES_PASSWORD')}@{values.get('TEST_POSTGRES_SERVER')}:{values.get('TEST_POSTGRES_PORT')}/{values.get('TEST_POSTGRES_DB_MAIN')}"
+            )
         else:
             # Default to SQLite in-memory for tests
             values["TEST_DATABASE_URL"] = "sqlite:///:memory:"
@@ -58,6 +62,7 @@ class Settings(BaseSettings):
         # If a .env.test file exists, it will override the .env file
         # This is useful for setting test-specific variables like USE_POSTGRES_FOR_TESTS
         # Pydantic-settings handles this chain loading automatically if both files are present
-        extra = "allow" # allows other env files to be loaded
+        extra = "allow"  # allows other env files to be loaded
 
-settings = Settings(_env_file='.env.test', _env_file_encoding='utf-8')
+
+settings = Settings(_env_file=".env.test", _env_file_encoding="utf-8")

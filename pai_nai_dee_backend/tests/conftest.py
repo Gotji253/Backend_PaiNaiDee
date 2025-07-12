@@ -39,12 +39,15 @@ if settings.USE_POSTGRES_FOR_TESTS:
         with SUPERUSER_ENGINE.connect() as conn:
             conn.execute(text("SELECT 1"))
     except Exception as e:
-        print(f"Could not connect to PostgreSQL superuser DB. Falling back to SQLite. Error: {e}")
+        print(
+            f"Could not connect to PostgreSQL superuser DB. Falling back to SQLite. Error: {e}"
+        )
         settings.USE_POSTGRES_FOR_TESTS = False
         SUPERUSER_ENGINE = None
 
 test_db_engine = None
 TestSessionLocal = None
+
 
 def wait_for_db(engine_to_check, retries=5, delay=5):
     """Wait for the database to be responsive."""
@@ -57,6 +60,7 @@ def wait_for_db(engine_to_check, retries=5, delay=5):
             if i < retries - 1:
                 time.sleep(delay)
     return False
+
 
 @pytest.fixture(scope="session", autouse=True)
 def setup_test_database():
@@ -72,12 +76,16 @@ def setup_test_database():
     # --- PostgreSQL-specific setup ---
     template_db_name = settings.TEST_POSTGRES_DB_MAIN
     with SUPERUSER_ENGINE.connect() as conn:
-        result = conn.execute(text(f"SELECT 1 FROM pg_database WHERE datname = '{template_db_name}'")).scalar_one_or_none()
+        result = conn.execute(
+            text(f"SELECT 1 FROM pg_database WHERE datname = '{template_db_name}'")
+        ).scalar_one_or_none()
         if not result:
             conn.execute(text(f"CREATE DATABASE {template_db_name}"))
 
             # Apply migrations to the template database
-            alembic_ini_path = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
+            alembic_ini_path = os.path.join(
+                os.path.dirname(__file__), "..", "alembic.ini"
+            )
             project_root = os.path.join(os.path.dirname(__file__), "..")
 
             env = os.environ.copy()
@@ -89,7 +97,9 @@ def setup_test_database():
 
             subprocess.run(
                 ["alembic", "-c", alembic_ini_path, "upgrade", "head"],
-                cwd=project_root, env=env, check=True
+                cwd=project_root,
+                env=env,
+                check=True,
             )
 
             # Restore original DATABASE_URL
@@ -117,15 +127,18 @@ def db() -> Generator[Session, Any, None]:
         template_db_name = settings.TEST_POSTGRES_DB_MAIN
 
         with SUPERUSER_ENGINE.connect() as conn:
-            conn.execute(text(f"CREATE DATABASE {current_test_db_name} TEMPLATE {template_db_name}"))
+            conn.execute(
+                text(
+                    f"CREATE DATABASE {current_test_db_name} TEMPLATE {template_db_name}"
+                )
+            )
 
         current_test_db_url = f"postgresql://{settings.TEST_POSTGRES_USER}:{settings.TEST_POSTGRES_PASSWORD}@{settings.TEST_POSTGRES_SERVER}:{settings.TEST_POSTGRES_PORT}/{current_test_db_name}"
         test_db_engine = create_engine(current_test_db_url)
     else:
         # --- SQLite: Use in-memory database ---
         test_db_engine = create_engine(
-            "sqlite:///:memory:",
-            connect_args={"check_same_thread": False}
+            "sqlite:///:memory:", connect_args={"check_same_thread": False}
         )
         # Apply migrations for SQLite
         alembic_ini_path = os.path.join(os.path.dirname(__file__), "..", "alembic.ini")
@@ -140,12 +153,15 @@ def db() -> Generator[Session, Any, None]:
 
         subprocess.run(
             ["alembic", "-c", alembic_ini_path, "upgrade", "head"],
-            cwd=project_root, env=env, check=True
+            cwd=project_root,
+            env=env,
+            check=True,
         )
         settings.DATABASE_URL = original_db_url
 
-
-    TestSessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=test_db_engine)
+    TestSessionLocal = sessionmaker(
+        autocommit=False, autoflush=False, bind=test_db_engine
+    )
 
     connection = test_db_engine.connect()
     transaction = connection.begin()
@@ -160,7 +176,7 @@ def db() -> Generator[Session, Any, None]:
     if test_db_engine:
         test_db_engine.dispose()
 
-    if settings.USE_POSTGRES_FOR_TESTS and 'current_test_db_name' in locals():
+    if settings.USE_POSTGRES_FOR_TESTS and "current_test_db_name" in locals():
         with SUPERUSER_ENGINE.connect() as conn:
             conn.execute(text(f"DROP DATABASE {current_test_db_name} WITH (FORCE)"))
 

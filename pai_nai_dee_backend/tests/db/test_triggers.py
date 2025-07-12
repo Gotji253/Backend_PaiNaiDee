@@ -12,25 +12,33 @@ from ...app.models.review import Review
 from ...app.core.config import settings
 
 
-@pytest.mark.skipif(not settings.USE_POSTGRES_FOR_TESTS, reason="Triggers are PostgreSQL-specific")
+@pytest.mark.skipif(
+    not settings.USE_POSTGRES_FOR_TESTS, reason="Triggers are PostgreSQL-specific"
+)
 def test_prevent_duplicate_review_trigger(db: Session):
     """
     Tests the trigger that prevents a user from reviewing the same place twice.
     This test is skipped if not using PostgreSQL.
     """
     # 1. Setup
-    user = User(username="trigger_user", email="trigger@test.com", hashed_password="password")
+    user = User(
+        username="trigger_user", email="trigger@test.com", hashed_password="password"
+    )
     place = Place(name="Trigger Place", category="Test")
     db.add_all([user, place])
     db.commit()
 
     # 2. First review (should succeed)
-    first_review = Review(user_id=user.id, place_id=place.id, rating=5, comment="Great!")
+    first_review = Review(
+        user_id=user.id, place_id=place.id, rating=5, comment="Great!"
+    )
     db.add(first_review)
     db.commit()
 
     # 3. Duplicate review (should fail)
-    duplicate_review = Review(user_id=user.id, place_id=place.id, rating=1, comment="Trying again")
+    duplicate_review = Review(
+        user_id=user.id, place_id=place.id, rating=1, comment="Trying again"
+    )
     db.add(duplicate_review)
 
     with pytest.raises(IntegrityError):
@@ -39,7 +47,9 @@ def test_prevent_duplicate_review_trigger(db: Session):
     db.rollback()
 
     # 4. Verify only one review exists
-    review_count = db.query(Review).filter_by(user_id=user.id, place_id=place.id).count()
+    review_count = (
+        db.query(Review).filter_by(user_id=user.id, place_id=place.id).count()
+    )
     assert review_count == 1
 
 
