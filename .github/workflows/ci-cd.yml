@@ -71,10 +71,10 @@ jobs:
         # (which is pai_nai_dee_backend/ due to defaults.run.working-directory)
 
     # Docker build step (optional, if you have a Dockerfile and want to build it)
-    # - name: Build Docker image
-    #   if: github.ref == 'refs/heads/main' # Example: only build on main branch pushes
-    #   run: |
-    #     docker build -t myapp:${{ github.sha }} .
-    #     # docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} # If pushing to registry
-    #     # docker push myregistry/myapp:${{ github.sha }}
-    #   working-directory: ./pai_nai_dee_backend # Ensure Docker build context is correct if Dockerfile is there
+    - name: Build Docker image
+      if: github.ref == 'refs/heads/main' # Example: only build on main branch pushes
+      run: |
+        docker build -t myapp:${{ github.sha }} .
+        # docker login -u ${{ secrets.DOCKER_USERNAME }} -p ${{ secrets.DOCKER_PASSWORD }} # If pushing to registry
+        # docker push myregistry/myapp:${{ github.sha }}
+      working-directory: ./pai_nai_dee_backend # Ensure Docker build context is correct if Dockerfile is there
