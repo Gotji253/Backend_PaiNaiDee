@@ -10,7 +10,9 @@ from .app.main import app  # FastAPI app instance
 from .app.db.database import Base, get_db
 from .app.core.config import settings
 from .app.models.user import User as UserModel
-from .app.core.security import create_access_token  # get_password_hash is no longer here
+from .app.core.security import (
+    create_access_token,
+)  # get_password_hash is no longer here
 from .app.core.password_utils import get_password_hash  # Import from new location
 from datetime import timedelta
 import pytest_asyncio  # Moved to top
@@ -61,11 +63,14 @@ def database_setup_logic():
             )
             SQLALCHEMY_DATABASE_URL_FOR_TESTS = settings.TEST_DATABASE_URL
             if SQLALCHEMY_DATABASE_URL_FOR_TESTS is None:
-                print("TEST_DATABASE_URL is None, defaulting to SQLite in-memory for test_all.py")
+                print(
+                    "TEST_DATABASE_URL is None, defaulting to SQLite in-memory for test_all.py"
+                )
                 SQLALCHEMY_DATABASE_URL_FOR_TESTS = "sqlite:///:memory:"
             connect_args = (
                 {"check_same_thread": False}
-                    if SQLALCHEMY_DATABASE_URL_FOR_TESTS and "sqlite" in SQLALCHEMY_DATABASE_URL_FOR_TESTS
+                if SQLALCHEMY_DATABASE_URL_FOR_TESTS
+                and "sqlite" in SQLALCHEMY_DATABASE_URL_FOR_TESTS
                 else {}
             )
             _test_engine = create_engine(
@@ -101,12 +106,15 @@ def database_setup_logic():
                     f"Falling back to TEST_DATABASE_URL: {settings.TEST_DATABASE_URL}"
                 )
                 SQLALCHEMY_DATABASE_URL_FOR_TESTS = settings.TEST_DATABASE_URL
-            if SQLALCHEMY_DATABASE_URL_FOR_TESTS is None: # Corrected indentation
-                print("TEST_DATABASE_URL is None in fallback, defaulting to SQLite in-memory for test_all.py")
+            if SQLALCHEMY_DATABASE_URL_FOR_TESTS is None:  # Corrected indentation
+                print(
+                    "TEST_DATABASE_URL is None in fallback, defaulting to SQLite in-memory for test_all.py"
+                )
                 SQLALCHEMY_DATABASE_URL_FOR_TESTS = "sqlite:///:memory:"
                 connect_args = (
                     {"check_same_thread": False}
-                    if SQLALCHEMY_DATABASE_URL_FOR_TESTS and "sqlite" in SQLALCHEMY_DATABASE_URL_FOR_TESTS
+                    if SQLALCHEMY_DATABASE_URL_FOR_TESTS
+                    and "sqlite" in SQLALCHEMY_DATABASE_URL_FOR_TESTS
                     else {}
                 )
                 _test_engine = create_engine(
@@ -143,8 +151,6 @@ def db_session(database_setup_logic):
     transaction.rollback()  # Rollback changes after each test
     connection.close()
     app.dependency_overrides.clear()  # Clear the override
-
-
 
 
 @pytest_asyncio.fixture(scope="function")  # Use the specific decorator

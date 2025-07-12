@@ -1,7 +1,7 @@
 import pytest
 from httpx import AsyncClient  # Use AsyncClient from httpx for async app
 from fastapi import status  # For status codes
-from ..app.core.config import settings # Moved to top and made relative
+from ..app.core.config import settings  # Moved to top and made relative
 
 # Fixtures like `client` and `db` are automatically injected by pytest from conftest.py
 

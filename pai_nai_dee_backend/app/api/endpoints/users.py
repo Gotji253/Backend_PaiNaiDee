@@ -109,9 +109,7 @@ def update_user(
 
     # Check for username conflict if username is being updated
     if user_in.username and db_user.username != user_in.username:
-        existing_user = crud_user.get_user_by_username(
-            db, username=user_in.username
-        )
+        existing_user = crud_user.get_user_by_username(db, username=user_in.username)
         if existing_user and existing_user.id != user_id:
             raise HTTPException(
                 status_code=status.HTTP_409_CONFLICT,

@@ -5,6 +5,7 @@ Tests for database migration scripts (Alembic).
 # import pytest # Unused
 from sqlalchemy.orm import Session
 from sqlalchemy import inspect  # text is unused
+
 # from alembic.config import Config # Unused
 # from alembic import command # Unused
 # import os # Unused

@@ -122,9 +122,7 @@ def update_review(
             detail="Not enough permissions to update this review",
         )
 
-    review = crud_review.update_review(
-        db=db, db_review=db_review, review_in=review_in
-    )
+    review = crud_review.update_review(db=db, db_review=db_review, review_in=review_in)
     # crud_place.update_place_average_rating(db, place_id=review.place_id) # Example
     return review
 

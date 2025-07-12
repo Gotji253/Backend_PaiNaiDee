@@ -5,7 +5,7 @@ from sqlalchemy.orm import Session  # For type hinting db fixture if used direct
 
 from ...app.core.config import settings
 from ...app.schemas.user import UserCreate  # User removed, For response validation
-from ...app.crud import crud_user # Moved to top
+from ...app.crud import crud_user  # Moved to top
 
 # from ...app import crud # If we need to interact with CRUD directly for setup/teardown
 
