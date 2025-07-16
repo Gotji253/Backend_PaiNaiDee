@@ -1,26 +1,25 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import sessionmaker, declarative_base
+from ..core.config import settings
+import os
 
-from ..core.config import settings  # Import settings
+# Determine if we are in a testing environment
+IS_TESTING = "TESTING" in os.environ
 
-# Use the DATABASE_URL from settings
-SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
-
-if SQLALCHEMY_DATABASE_URL is None:
-    raise ValueError(
-        "DATABASE_URL is not set. Please check your environment or .env file."
-    )
-
-# Adjust engine creation based on whether it's SQLite or PostgreSQL
-if SQLALCHEMY_DATABASE_URL.startswith("sqlite"):
-    engine = create_engine(
-        SQLALCHEMY_DATABASE_URL,
-        connect_args={"check_same_thread": False},  # Needed only for SQLite
-    )
+# --- Database URL Configuration ---
+if IS_TESTING:
+    SQLALCHEMY_DATABASE_URL = settings.TEST_DATABASE_URL
 else:
-    # For PostgreSQL or other databases, connect_args might not be needed or different
-    engine = create_engine(SQLALCHEMY_DATABASE_URL)
+    SQLALCHEMY_DATABASE_URL = settings.DATABASE_URL
+
+# --- Synchronous Engine ---
+# Add connect_args for SQLite to handle multithreading issues in tests
+connect_args = (
+    {"check_same_thread": False}
+    if SQLALCHEMY_DATABASE_URL and SQLALCHEMY_DATABASE_URL.startswith("sqlite")
+    else {}
+)
+engine = create_engine(SQLALCHEMY_DATABASE_URL, connect_args=connect_args)
 
 
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
